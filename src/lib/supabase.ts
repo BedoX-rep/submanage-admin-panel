@@ -1,4 +1,3 @@
-
 import { createClient } from "@supabase/supabase-js";
 
 export type Subscription = {
@@ -23,10 +22,14 @@ export type User = {
   is_admin: boolean;
 };
 
-// Use the variables from the client.ts file which is properly set up
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Create a client with the service role key for admin operations
