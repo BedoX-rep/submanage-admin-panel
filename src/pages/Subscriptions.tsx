@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { 
   CheckCircle, 
   XCircle, 
@@ -43,6 +42,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { AssignSubscriptionDialog } from "@/components/AssignSubscriptionDialog";
+import { updateSubscription, deleteSubscription } from "@/lib/subscription-utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -61,6 +62,7 @@ const Subscriptions = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   // Form state for editing
   const [form, setForm] = useState({
@@ -147,29 +149,21 @@ const Subscriptions = () => {
   };
 
   const handleUpdateSubscription = async () => {
-    if (!selectedSubscription) return;
+    if (!selectedSubscription || !form) return;
 
     try {
-      const { error } = await supabaseAdmin
-        .from("subscriptions")
-        .update({
-          subscription_type: form.subscription_type,
-          subscription_status: form.subscription_status,
-          end_date: new Date(form.end_date).toISOString(),
-          trial_used: form.trial_used,
-        })
-        .eq("id", selectedSubscription.id);
-
-      if (error) {
-        throw error;
-      }
+      await updateSubscription(selectedSubscription.id, {
+        subscription_type: form.subscription_type as any,
+        subscription_status: form.subscription_status as any,
+        is_recurring: form.trial_used,
+        end_date: form.end_date,
+      });
 
       toast({
         title: "Success",
         description: "Subscription updated successfully",
       });
 
-      // Refresh the data
       await fetchSubscriptions();
       setIsDialogOpen(false);
     } catch (error) {
@@ -178,6 +172,24 @@ const Subscriptions = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to update subscription",
+      });
+    }
+  };
+
+  const handleDeleteSubscription = async (subscriptionId: string) => {
+    try {
+      await deleteSubscription(subscriptionId);
+      toast({
+        title: "Success",
+        description: "Subscription deleted successfully",
+      });
+      await fetchSubscriptions();
+    } catch (error) {
+      console.error("Error deleting subscription:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete subscription",
       });
     }
   };
@@ -213,7 +225,12 @@ const Subscriptions = () => {
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-3xl font-bold text-admin-primary mb-6">Subscriptions</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
+          <Button onClick={() => setIsAssignDialogOpen(true)}>
+            Assign Subscription
+          </Button>
+        </div>
         
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -289,6 +306,7 @@ const Subscriptions = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Subscription</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Auto-renew</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -334,10 +352,22 @@ const Subscriptions = () => {
                       {renderStatusBadge(subscription.subscription_status)}
                     </TableCell>
                     <TableCell>
+                      <Badge variant={subscription.is_recurring ? "default" : "outline"}>
+                        {subscription.is_recurring ? "Yes" : "No"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       {format(new Date(subscription.start_date), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(subscription.end_date), "MMM d, yyyy")}
+                      <div className="flex items-center gap-2">
+                        {format(new Date(subscription.end_date), "MMM d, yyyy")}
+                        {isAfter(new Date(subscription.end_date), new Date()) ? (
+                          <Badge variant="outline" className="bg-green-50">Active</Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-red-50">Expired</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -368,6 +398,30 @@ const Subscriptions = () => {
                         >
                           <span className="sr-only">Edit</span>
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteSubscription(subscription.id)}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <span className="sr-only">Delete</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-4 w-4"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
                         </Button>
                       </div>
                     </TableCell>
@@ -567,6 +621,12 @@ const Subscriptions = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AssignSubscriptionDialog
+          open={isAssignDialogOpen}
+          onOpenChange={setIsAssignDialogOpen}
+          onSuccess={fetchSubscriptions}
+        />
       </div>
     </AdminLayout>
   );

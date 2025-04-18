@@ -1,0 +1,79 @@
+
+import { supabaseAdmin } from "@/lib/supabase";
+import { addDays } from "date-fns";
+
+export type SubscriptionPlan = "Trial" | "Monthly" | "Quarterly" | "Lifetime";
+
+export const SUBSCRIPTION_DURATIONS: Record<SubscriptionPlan, number> = {
+  Trial: 7,
+  Monthly: 30,
+  Quarterly: 90,
+  Lifetime: 365 * 200, // 200 years
+};
+
+export async function assignSubscription(
+  userId: string,
+  email: string,
+  displayName: string,
+  plan: SubscriptionPlan,
+  isRecurring: boolean = false
+) {
+  const startDate = new Date();
+  const endDate = addDays(startDate, SUBSCRIPTION_DURATIONS[plan]);
+
+  const { data, error } = await supabaseAdmin
+    .from("subscriptions")
+    .insert({
+      user_id: userId,
+      email,
+      display_name: displayName,
+      subscription_type: plan,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      is_recurring: isRecurring,
+      trial_used: plan === "Trial",
+      subscription_status: "Active"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function updateSubscription(
+  subscriptionId: string,
+  updates: Partial<{
+    subscription_type: SubscriptionPlan;
+    subscription_status: "Active" | "Suspended" | "Cancelled";
+    is_recurring: boolean;
+    end_date: string;
+  }>
+) {
+  const { data, error } = await supabaseAdmin
+    .from("subscriptions")
+    .update(updates)
+    .eq("id", subscriptionId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteSubscription(subscriptionId: string) {
+  const { error } = await supabaseAdmin
+    .from("subscriptions")
+    .delete()
+    .eq("id", subscriptionId);
+
+  if (error) {
+    throw error;
+  }
+}
