@@ -27,7 +27,6 @@ export type User = {
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Create a client with the service role key for admin operations
