@@ -69,6 +69,7 @@ const Subscriptions = () => {
     subscription_status: "",
     end_date: "",
     trial_used: false,
+    is_recurring: false,
   });
 
   const fetchSubscriptions = async () => {
@@ -136,6 +137,7 @@ const Subscriptions = () => {
       subscription_status: subscription.subscription_status,
       end_date: new Date(subscription.end_date).toISOString().split("T")[0],
       trial_used: subscription.trial_used,
+      is_recurring: subscription.is_recurring,
     });
     setIsEditing(true);
     setIsDialogOpen(true);
@@ -490,6 +492,16 @@ const Subscriptions = () => {
                       }
                     />
                     <Label htmlFor="trial-used">Trial Used</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="auto-renew"
+                      checked={form.is_recurring}
+                      onCheckedChange={(checked) =>
+                        setForm({ ...form, is_recurring: checked })
+                      }
+                    />
+                    <Label htmlFor="auto-renew">Auto-renew Subscription</Label>
                   </div>
                 </>
               ) : (
