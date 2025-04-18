@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -57,8 +58,8 @@ const Subscriptions = () => {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
-    status: "",
-    type: "",
+    status: "all", // Changed from empty string to "all"
+    type: "all",   // Changed from empty string to "all"
   });
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
@@ -83,11 +84,11 @@ const Subscriptions = () => {
         query = query.or(`email.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`);
       }
 
-      if (filters.status) {
+      if (filters.status && filters.status !== "all") { // Changed condition
         query = query.eq("subscription_status", filters.status);
       }
 
-      if (filters.type) {
+      if (filters.type && filters.type !== "all") { // Changed condition
         query = query.eq("subscription_type", filters.type);
       }
 
@@ -258,7 +259,7 @@ const Subscriptions = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Suspended">Suspended</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
@@ -275,7 +276,7 @@ const Subscriptions = () => {
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="Trial">Trial</SelectItem>
                   <SelectItem value="Monthly">Monthly</SelectItem>
                   <SelectItem value="Quarterly">Quarterly</SelectItem>
@@ -287,7 +288,7 @@ const Subscriptions = () => {
             <Button 
               variant="outline" 
               onClick={() => {
-                setFilters({ status: "", type: "" });
+                setFilters({ status: "all", type: "all" }); // Changed from empty string to "all"
                 setSearchTerm("");
               }}
               className="gap-1"
