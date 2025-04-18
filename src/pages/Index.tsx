@@ -6,6 +6,7 @@ import AdminLayout from "@/components/layouts/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ListChecks, AlertCircle } from "lucide-react";
 import { supabaseAdmin, Subscription, User } from "@/lib/supabase";
+import { Button } from "@/components/ui/custom-button";
 
 const Index = () => {
   const { user, isAdmin, isLoading } = useAuth();
