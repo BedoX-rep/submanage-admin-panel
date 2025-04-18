@@ -34,18 +34,19 @@ export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
   try {
+    // Get user data directly from auth.users using the admin client
     const { data, error } = await supabaseAdmin
-      .from("users")
-      .select("is_admin")
-      .eq("id", userId)
-      .single();
+      .auth
+      .admin
+      .getUserById(userId);
 
     if (error) {
       console.error("Error checking admin status:", error);
       return false;
     }
 
-    return data?.is_admin || false;
+    // Check if user_metadata contains is_admin flag
+    return data?.user?.user_metadata?.is_admin === true;
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase, isUserAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -29,9 +29,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        isUserAdmin(session.user.id).then(admin => {
-          setIsAdmin(admin);
-        });
+        // Check if user has admin privileges from user metadata
+        const isAdminUser = session.user.user_metadata?.is_admin === true;
+        setIsAdmin(isAdminUser);
       }
       
       setIsLoading(false);
@@ -43,9 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        isUserAdmin(session.user.id).then(admin => {
-          setIsAdmin(admin);
-        });
+        // Check if user has admin privileges from user metadata
+        const isAdminUser = session.user.user_metadata?.is_admin === true;
+        setIsAdmin(isAdminUser);
       } else {
         setIsAdmin(false);
       }
