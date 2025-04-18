@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -43,8 +42,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { AssignSubscriptionDialog } from "@/components/AssignSubscriptionDialog";
 import { updateSubscription, deleteSubscription } from "@/lib/subscription-utils";
+import { SubscriptionActions } from "@/components/SubscriptionActions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -63,7 +62,6 @@ const Subscriptions = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   // Form state for editing
   const [form, setForm] = useState({
@@ -228,9 +226,6 @@ const Subscriptions = () => {
       <div>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
-          <Button onClick={() => setIsAssignDialogOpen(true)}>
-            Assign Subscription
-          </Button>
         </div>
         
         {/* Search and filters */}
@@ -371,60 +366,12 @@ const Subscriptions = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewDetails(subscription)}
-                        >
-                          <span className="sr-only">View details</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-4 w-4"
-                          >
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(subscription)}
-                        >
-                          <span className="sr-only">Edit</span>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteSubscription(subscription.id)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <span className="sr-only">Delete</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-4 w-4"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </Button>
-                      </div>
+                      <SubscriptionActions
+                        subscription={subscription}
+                        onView={handleViewDetails}
+                        onEdit={handleEdit}
+                        onDelete={handleDeleteSubscription}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -622,12 +569,6 @@ const Subscriptions = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <AssignSubscriptionDialog
-          open={isAssignDialogOpen}
-          onOpenChange={setIsAssignDialogOpen}
-          onSuccess={fetchSubscriptions}
-        />
       </div>
     </AdminLayout>
   );
