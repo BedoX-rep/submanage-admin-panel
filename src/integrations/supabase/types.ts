@@ -247,6 +247,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      renew_recurring_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_positions: {
         Args: { moved_id: string; new_pos: number }
         Returns: undefined

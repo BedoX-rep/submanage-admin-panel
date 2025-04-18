@@ -12,6 +12,7 @@ export type Subscription = {
   trial_used: boolean;
   subscription_status: "Active" | "Suspended" | "Cancelled";
   created_at: string;
+  is_recurring: boolean;
 };
 
 export type User = {
