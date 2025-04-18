@@ -1,0 +1,36 @@
+[19:40:37.473] Cloning github.com/BedoX-rep/submanage-admin-panel (Branch: main, Commit: bd7378c)
+[19:40:37.654] Previous build caches not available
+[19:40:37.750] Cloning completed: 277.000ms
+[19:40:38.175] Running build in Washington, D.C., USA (East) – iad1
+[19:40:38.320] Running "vercel build"
+[19:40:38.701] Vercel CLI 41.6.0
+[19:40:39.612] Installing dependencies...
+[19:40:41.033] npm error code ERESOLVE
+[19:40:41.034] npm error ERESOLVE could not resolve
+[19:40:41.035] npm error
+[19:40:41.035] npm error While resolving: react-day-picker@8.10.1
+[19:40:41.035] npm error Found: date-fns@4.1.0
+[19:40:41.035] npm error node_modules/date-fns
+[19:40:41.036] npm error   date-fns@"^4.1.0" from the root project
+[19:40:41.036] npm error
+[19:40:41.036] npm error Could not resolve dependency:
+[19:40:41.036] npm error peer date-fns@"^2.28.0 || ^3.0.0" from react-day-picker@8.10.1
+[19:40:41.037] npm error node_modules/react-day-picker
+[19:40:41.037] npm error   react-day-picker@"^8.10.1" from the root project
+[19:40:41.037] npm error
+[19:40:41.037] npm error Conflicting peer dependency: date-fns@3.6.0
+[19:40:41.037] npm error node_modules/date-fns
+[19:40:41.038] npm error   peer date-fns@"^2.28.0 || ^3.0.0" from react-day-picker@8.10.1
+[19:40:41.038] npm error   node_modules/react-day-picker
+[19:40:41.038] npm error     react-day-picker@"^8.10.1" from the root project
+[19:40:41.038] npm error
+[19:40:41.038] npm error Fix the upstream dependency conflict, or retry
+[19:40:41.038] npm error this command with --force or --legacy-peer-deps
+[19:40:41.039] npm error to accept an incorrect (and potentially broken) dependency resolution.
+[19:40:41.039] npm error
+[19:40:41.039] npm error
+[19:40:41.039] npm error For a full report see:
+[19:40:41.039] npm error /vercel/.npm/_logs/2025-04-18T18_40_39_856Z-eresolve-report.txt
+[19:40:41.040] npm error A complete log of this run can be found in: /vercel/.npm/_logs/2025-04-18T18_40_39_856Z-debug-0.log
+[19:40:41.075] Error: Command "npm install" exited with 1
+[19:40:41.249] 
