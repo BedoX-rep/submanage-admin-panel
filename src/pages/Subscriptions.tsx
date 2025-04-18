@@ -156,7 +156,7 @@ const Subscriptions = () => {
       await updateSubscription(selectedSubscription.id, {
         subscription_type: form.subscription_type as any,
         subscription_status: form.subscription_status as any,
-        is_recurring: form.trial_used,
+        is_recurring: form.is_recurring,
         end_date: form.end_date,
       });
 
