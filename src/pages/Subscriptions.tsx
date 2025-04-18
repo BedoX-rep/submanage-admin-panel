@@ -350,9 +350,35 @@ const Subscriptions = () => {
                       {renderStatusBadge(subscription.subscription_status)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={subscription.is_recurring ? "default" : "outline"}>
-                        {subscription.is_recurring ? "Yes" : "No"}
-                      </Badge>
+                      <Select
+                        value={subscription.is_recurring ? "true" : "false"}
+                        onValueChange={async (value) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              is_recurring: value === "true"
+                            });
+                            await fetchSubscriptions();
+                            toast({
+                              title: "Success",
+                              description: "Auto-renew setting updated",
+                            });
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update auto-renew setting",
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Yes</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       {format(new Date(subscription.start_date), "MMM d, yyyy")}
