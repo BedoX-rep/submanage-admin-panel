@@ -104,7 +104,7 @@ const Subscriptions = () => {
       }
 
       setSubscriptions(data || []);
-      
+
       if (count !== null) {
         setTotalCount(count);
         setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
@@ -218,6 +218,20 @@ const Subscriptions = () => {
             Cancelled
           </Badge>
         );
+      case "Expired":
+        return (
+          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+            <XCircle className="w-3 h-3 mr-1" />
+            Expired
+          </Badge>
+        );
+      case "inActive":
+        return (
+          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+            <XCircle className="w-3 h-3 mr-1" />
+            Inactive
+          </Badge>
+        );
       default:
         return <Badge>{status}</Badge>;
     }
@@ -229,7 +243,7 @@ const Subscriptions = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
         </div>
-        
+
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <form onSubmit={handleSearch} className="flex-1">
@@ -244,7 +258,7 @@ const Subscriptions = () => {
               />
             </div>
           </form>
-          
+
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center">
               <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -258,12 +272,14 @@ const Subscriptions = () => {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="inActive">inActive</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
                   <SelectItem value="Suspended">Suspended</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center">
               <Select
                 value={filters.type}
@@ -281,7 +297,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <Button 
               variant="outline" 
               onClick={() => {
@@ -427,6 +443,8 @@ const Subscriptions = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="inActive">inActive</SelectItem>
+                          <SelectItem value="Expired">Expired</SelectItem>
                           <SelectItem value="Suspended">Suspended</SelectItem>
                           <SelectItem value="Cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -559,7 +577,7 @@ const Subscriptions = () => {
                       onValueChange={(value) => {
                         const startDate = new Date();
                         let endDate = new Date();
-                        
+
                         switch(value) {
                           case "Trial":
                             endDate.setDate(startDate.getDate() + 7);
@@ -574,7 +592,7 @@ const Subscriptions = () => {
                             endDate.setFullYear(startDate.getFullYear() + 200);
                             break;
                         }
-                        
+
                         setForm({
                           ...form,
                           subscription_type: value,
