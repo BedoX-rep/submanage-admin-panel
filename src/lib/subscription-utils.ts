@@ -176,9 +176,27 @@ export async function checkAndRenewSubscriptions() {
     }
   }
   
+  // After processing, fetch latest subscriptions
+  const { data: latestSubscriptions, error: fetchError } = await supabaseAdmin
+    .from("subscriptions")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (fetchError) {
+    console.error("Error fetching updated subscriptions:", fetchError);
+    return { 
+      success: true, 
+      renewed: renewedCount,
+      expired: expiredSubscriptions?.length || 0,
+      subscriptions: null,
+      error: fetchError
+    };
+  }
+
   return { 
     success: true, 
     renewed: renewedCount,
-    expired: expiredSubscriptions?.length || 0 
+    expired: expiredSubscriptions?.length || 0,
+    subscriptions: latestSubscriptions
   };
 }

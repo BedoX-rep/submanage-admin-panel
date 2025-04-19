@@ -323,12 +323,19 @@ const Subscriptions = () => {
           <Button onClick={async () => {
             try {
               const result = await checkAndRenewSubscriptions();
-              toast({
-                title: "Renewal Check",
-                description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
-              });
-              if (result.renewed > 0) {
-                fetchSubscriptions();
+              
+              if (result.subscriptions) {
+                setSubscriptions(result.subscriptions);
+                toast({
+                  title: "Renewal Check",
+                  description: `${result.renewed} renewed, ${result.expired} expired subscriptions`,
+                });
+              } else {
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Failed to fetch updated subscriptions"
+                });
               }
             } catch (error) {
               toast({
