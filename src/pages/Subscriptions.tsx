@@ -104,7 +104,7 @@ const Subscriptions = () => {
       }
 
       setSubscriptions(data || []);
-
+      
       if (count !== null) {
         setTotalCount(count);
         setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
@@ -229,7 +229,7 @@ const Subscriptions = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
         </div>
-
+        
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <form onSubmit={handleSearch} className="flex-1">
@@ -244,7 +244,7 @@ const Subscriptions = () => {
               />
             </div>
           </form>
-
+          
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center">
               <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -263,7 +263,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="flex items-center">
               <Select
                 value={filters.type}
@@ -281,7 +281,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-
+            
             <Button 
               variant="outline" 
               onClick={() => {
@@ -307,14 +307,13 @@ const Subscriptions = () => {
                 <TableHead>Auto-renew</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
-                <TableHead>Created At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
+                  <TableCell colSpan={6} className="text-center py-10">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin-primary"></div>
                     </div>
@@ -322,7 +321,7 @@ const Subscriptions = () => {
                 </TableRow>
               ) : subscriptions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
+                  <TableCell colSpan={6} className="text-center py-10">
                     No subscriptions found
                   </TableCell>
                 </TableRow>
@@ -400,9 +399,6 @@ const Subscriptions = () => {
                         'Not set'
                       )}
                     </TableCell>
-                    <TableCell>
-                      {subscription.created_at ? format(new Date(subscription.created_at), "MMM d, yyyy") : "Not set"}
-                    </TableCell>
                     <TableCell className="text-right">
                       <SubscriptionActions
                         subscription={subscription}
@@ -475,7 +471,7 @@ const Subscriptions = () => {
                       onValueChange={(value) => {
                         const startDate = new Date();
                         let endDate = new Date();
-
+                        
                         switch(value) {
                           case "Trial":
                             endDate.setDate(startDate.getDate() + 7);
@@ -490,7 +486,7 @@ const Subscriptions = () => {
                             endDate.setFullYear(startDate.getFullYear() + 200);
                             break;
                         }
-
+                        
                         setForm({
                           ...form,
                           subscription_type: value,
