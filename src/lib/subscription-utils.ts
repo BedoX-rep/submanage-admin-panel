@@ -78,3 +78,23 @@ export async function deleteSubscription(subscriptionId: string) {
     throw error;
   }
 }
+
+export async function removeSubscription(subscriptionId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("subscriptions")
+    .update({
+      start_date: null,
+      end_date: null,
+      subscription_type: null,
+      subscription_status: "inActive"
+    })
+    .eq("id", subscriptionId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

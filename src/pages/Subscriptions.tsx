@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { updateSubscription, deleteSubscription } from "@/lib/subscription-utils";
+import { updateSubscription, deleteSubscription, removeSubscription } from "@/lib/subscription-utils";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 
 const ITEMS_PER_PAGE = 10;
@@ -173,6 +173,24 @@ const Subscriptions = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to update subscription",
+      });
+    }
+  };
+
+  const handleRemoveSubscription = async (subscriptionId: string) => {
+    try {
+      await removeSubscription(subscriptionId);
+      toast({
+        title: "Success",
+        description: "Subscription removed successfully",
+      });
+      await fetchSubscriptions();
+    } catch (error) {
+      console.error("Error removing subscription:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove subscription",
       });
     }
   };
@@ -413,6 +431,7 @@ const Subscriptions = () => {
                         onView={handleViewDetails}
                         onEdit={handleEdit}
                         onDelete={handleDeleteSubscription}
+                        onRemove={handleRemoveSubscription}
                       />
                     </TableCell>
                   </TableRow>

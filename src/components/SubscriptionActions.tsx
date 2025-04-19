@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Eye, Ban } from "lucide-react";
 import type { Subscription } from "@/lib/supabase";
 
 interface SubscriptionActionsProps {
@@ -15,6 +15,7 @@ interface SubscriptionActionsProps {
   onView: (subscription: Subscription) => void;
   onEdit: (subscription: Subscription) => void;
   onDelete: (id: string) => void;
+  onRemove: (id: string) => void;
 }
 
 export function SubscriptionActions({
@@ -22,6 +23,7 @@ export function SubscriptionActions({
   onView,
   onEdit,
   onDelete,
+  onRemove,
 }: SubscriptionActionsProps) {
   return (
     <div className="flex justify-end gap-2">
@@ -40,6 +42,15 @@ export function SubscriptionActions({
       >
         <span className="sr-only">Edit</span>
         <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onRemove(subscription.id)}
+        className="text-amber-500 hover:text-amber-600"
+      >
+        <span className="sr-only">Remove Subscription</span>
+        <Ban className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
