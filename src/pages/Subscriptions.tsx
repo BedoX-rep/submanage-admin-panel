@@ -27,8 +27,6 @@ import { SubscriptionPlan, checkAndRenewSubscriptions, updateSubscription, delet
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 import { SubscriptionDatePicker } from "@/components/SubscriptionDatePicker";
 import { cn } from "@/lib/utils";
-import { SubscriptionDetails } from "@/components/SubscriptionDetails";
-import { SubscriptionViewModal } from "@/components/SubscriptionViewModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -161,23 +159,6 @@ const Subscriptions = () => {
     }
   };
 
-  const [viewingSubscription, setViewingSubscription] = useState<Subscription | null>(null);
-  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
-
-  // Check if subscription is expired
-  const checkSubscriptionStatus = (subscription: Subscription) => {
-    if (subscription.end_date && new Date(subscription.end_date) < new Date() && !subscription.is_recurring) {
-      return updateSubscription(subscription.id, {
-        subscription_status: "Expired"
-      });
-    }
-  };
-
-  // Add to useEffect
-  useEffect(() => {
-    subscriptions.forEach(checkSubscriptionStatus);
-  }, [subscriptions]);
-
   return (
     <AdminLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -279,7 +260,7 @@ const Subscriptions = () => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50/50">
+              <TableRow className="bg-gray-50">
                 <TableHead className="py-3 font-semibold text-gray-600">User</TableHead>
                 <TableHead className="font-semibold text-gray-600">Subscription</TableHead>
                 <TableHead className="font-semibold text-gray-600">Dates</TableHead>
@@ -304,19 +285,58 @@ const Subscriptions = () => {
                 </TableRow>
               ) : (
                 subscriptions.map((subscription) => (
-                  <TableRow 
-                    key={subscription.id} 
-                    className={cn(
-                      "hover:bg-gray-50/50 transition-colors",
-                      subscription.subscription_status === "Expired" && "bg-red-50/30",
-                      subscription.subscription_status === "Active" && "bg-green-50/30"
-                    )}
-                  >
+                  <TableRow key={subscription.id} className="hover:bg-gray-50">
                     <TableCell className="py-4">
-                      <SubscriptionDetails 
-                        subscription={subscription}
-                        onUpdate={fetchSubscriptions}
-                      />
+                      <div className="space-y-1">
+                        <Input
+                          value={subscription.display_name}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                display_name: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update display name"
+                              });
+                            }
+                          }}
+                          className="font-medium bg-transparent border-transparent hover:border-gray-200 focus:border-purple-500 focus:bg-white"
+                        />
+                        <Input
+                          value={subscription.email}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                email: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update email"
+                              });
+                            }
+                          }}
+                          className="text-sm text-gray-500 bg-transparent border-transparent hover:border-gray-200 focus:border-purple-500 focus:bg-white"
+                        />
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline" className={
+                            subscription.trial_used 
+                              ? "bg-orange-100 text-orange-800 hover:bg-orange-100" 
+                              : "bg-green-100 text-green-800 hover:bg-green-100"
+                          }>
+                            Trial {subscription.trial_used ? "Used" : "Available"}
+                          </Badge>
+                          <span className="text-xs text-gray-400">
+                            Created: {format(new Date(subscription.created_at), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                      </div>
                     </TableCell>
                     
                     <TableCell>
@@ -376,7 +396,7 @@ const Subscriptions = () => {
                     <TableCell>
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <span className="text-xs font-medium text-gray-500">Start</span>
+                          <span className="text-xs font-medium text-gray-500">Start Date</span>
                           <SubscriptionDatePicker
                             date={subscription.start_date ? new Date(subscription.start_date) : null}
                             onSelect={async (date) => {
@@ -397,7 +417,7 @@ const Subscriptions = () => {
                         </div>
                         
                         <div className="space-y-1">
-                          <span className="text-xs font-medium text-gray-500">End</span>
+                          <span className="text-xs font-medium text-gray-500">End Date</span>
                           <SubscriptionDatePicker
                             date={subscription.end_date ? new Date(subscription.end_date) : null}
                             onSelect={async (date) => {
@@ -406,7 +426,6 @@ const Subscriptions = () => {
                                   end_date: date.toISOString()
                                 });
                                 await fetchSubscriptions();
-                                await checkSubscriptionStatus(subscription);
                               } catch (error) {
                                 toast({
                                   variant: "destructive",
@@ -438,13 +457,7 @@ const Subscriptions = () => {
                           }
                         }}
                       >
-                        <SelectTrigger className={cn(
-                          "w-[120px] border-gray-200",
-                          subscription.subscription_status === "Active" && "bg-green-50 text-green-700",
-                          subscription.subscription_status === "Expired" && "bg-red-50 text-red-700",
-                          subscription.subscription_status === "Suspended" && "bg-amber-50 text-amber-700",
-                          subscription.subscription_status === "Cancelled" && "bg-gray-50 text-gray-700",
-                        )}>
+                        <SelectTrigger className="w-[120px] bg-gray-50 border-gray-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -461,8 +474,6 @@ const Subscriptions = () => {
                         subscription={subscription}
                         onDelete={handleDeleteSubscription}
                         onRemove={handleRemoveSubscription}
-                        onView={() => setViewingSubscription(subscription)}
-                        onEdit={() => setEditingSubscription(subscription)}
                       />
                     </TableCell>
                   </TableRow>
@@ -472,6 +483,7 @@ const Subscriptions = () => {
           </Table>
         </div>
 
+        {/* Pagination with improved styling */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <div className="text-sm text-gray-500">
@@ -503,11 +515,6 @@ const Subscriptions = () => {
             </div>
           </div>
         )}
-
-        <SubscriptionViewModal
-          subscription={viewingSubscription}
-          onClose={() => setViewingSubscription(null)}
-        />
       </div>
     </AdminLayout>
   );
