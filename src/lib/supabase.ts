@@ -1,4 +1,3 @@
-
 import { createClient } from "@supabase/supabase-js";
 
 export type Subscription = {
@@ -27,25 +26,30 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing required Supabase environment variables');
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Create a client with the service role key for admin operations
-export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : supabase;
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(userId);
+    // Get user data directly from auth.users using the admin client
+    const { data, error } = await supabaseAdmin
+      .auth
+      .admin
+      .getUserById(userId);
 
     if (error) {
       console.error("Error checking admin status:", error);
       return false;
     }
 
-    return user?.user_metadata?.is_admin === true;
+    // Check if user_metadata contains is_admin flag
+    return data?.user?.user_metadata?.is_admin === true;
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;
