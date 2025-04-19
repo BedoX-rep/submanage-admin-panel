@@ -31,7 +31,7 @@ export async function assignSubscription(
       start_date: startDate.toISOString(),
       end_date: endDate.toISOString(),
       is_recurring: isRecurring,
-      trial_used: plan === "Trial",
+      trial_used: plan === "Trial" ? true : false,
       subscription_status: "Active"
     })
     .select()
