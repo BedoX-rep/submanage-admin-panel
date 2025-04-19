@@ -152,6 +152,11 @@ const Subscriptions = () => {
   }, []);
 
   useEffect(() => {
+    const intervalId = setInterval(fetchSubscriptions, 1000); // Refresh every second
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     fetchSubscriptions();
   }, [currentPage, searchTerm, filters]);
 
@@ -327,7 +332,15 @@ const Subscriptions = () => {
                 title: "Renewal Check",
                 description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
               });
-              window.location.reload();
+              // Click reset button after 1 second
+              setTimeout(() => {
+                const resetButton = document.querySelector('[aria-label="Reset filters"]') as HTMLButtonElement;
+                if (resetButton) {
+                  resetButton.click();
+                }
+              }, 1000);
+              
+              fetchSubscriptions();
             } catch (error) {
               toast({
                 variant: "destructive",
