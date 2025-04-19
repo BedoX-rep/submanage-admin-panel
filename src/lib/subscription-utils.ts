@@ -114,8 +114,30 @@ export async function removeSubscription(subscriptionId: string) {
 }
 
 export async function checkAndRenewSubscriptions() {
-  const twoHoursFromNow = new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString();
+  const now = new Date();
+  const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
   
+  // Check for expired subscriptions
+  const { data: expiredSubscriptions, error: expiredError } = await supabaseAdmin
+    .from("subscriptions")
+    .select("*")
+    .eq("subscription_status", "Active")
+    .lt("end_date", now.toISOString());
+
+  if (expiredError) {
+    console.error("Error checking expired subscriptions:", expiredError);
+  } else if (expiredSubscriptions) {
+    for (const subscription of expiredSubscriptions) {
+      try {
+        await updateSubscription(subscription.id, {
+          subscription_status: "Expired"
+        });
+      } catch (error) {
+        console.error(`Error updating expired subscription ${subscription.id}:`, error);
+      }
+    }
+  }
+
   // Get all active recurring subscriptions that end within the next 2 hours
   const { data: subscriptionsToRenew, error } = await supabaseAdmin
     .from("subscriptions")
@@ -130,7 +152,7 @@ export async function checkAndRenewSubscriptions() {
   }
   
   if (!subscriptionsToRenew || subscriptionsToRenew.length === 0) {
-    return { success: true, renewed: 0 };
+    return { success: true, renewed: 0, expired: expiredSubscriptions?.length || 0 };
   }
   
   let renewedCount = 0;
@@ -138,7 +160,6 @@ export async function checkAndRenewSubscriptions() {
   // Process each subscription
   for (const subscription of subscriptionsToRenew) {
     try {
-      const now = new Date();
       const plan = subscription.subscription_type as SubscriptionPlan;
       const newEndDate = addDays(now, SUBSCRIPTION_DURATIONS[plan]);
       
@@ -154,5 +175,9 @@ export async function checkAndRenewSubscriptions() {
     }
   }
   
-  return { success: true, renewed: renewedCount };
+  return { 
+    success: true, 
+    renewed: renewedCount,
+    expired: expiredSubscriptions?.length || 0 
+  };
 }
