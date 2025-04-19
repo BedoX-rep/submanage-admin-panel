@@ -327,9 +327,7 @@ const Subscriptions = () => {
                 title: "Renewal Check",
                 description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
               });
-              if (result.renewed > 0) {
-                fetchSubscriptions();
-              }
+              window.location.reload();
             } catch (error) {
               toast({
                 variant: "destructive",
