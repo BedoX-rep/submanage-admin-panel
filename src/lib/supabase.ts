@@ -23,14 +23,13 @@ export type User = {
   is_admin: boolean;
 };
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+// Hard-coded values for the Lovable environment
+// Replace these with your actual Supabase project details
+const supabaseUrl = "https://uhzjrtfppzvsuvekcrda.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoempydGZwcHp2c3V2ZWtjcmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2MTYyOTQsImV4cCI6MjA1OTE5MjI5NH0.nczNPVysOG3bi2Us7jzypXOZGpv31MYiV-AMdXQZWuU";
+const supabaseServiceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoempydGZwcHp2c3V2ZWtjcmRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MzYxNjI5NCwiZXhwIjoyMDU5MTkyMjk0fQ.7G0LmDsw0uQGWeU90eJrHrR2X-6zHU_IrQQD6TVFS-w";
 
-if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
+// Create client instances
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Create a client with the service role key for admin operations
