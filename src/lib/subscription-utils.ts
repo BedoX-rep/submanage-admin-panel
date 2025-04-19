@@ -21,6 +21,16 @@ export async function assignSubscription(
   const startDate = new Date();
   const endDate = addDays(startDate, SUBSCRIPTION_DURATIONS[plan]);
 
+  // First, check if user has used trial before
+  const { data: existingData } = await supabaseAdmin
+    .from("subscriptions")
+    .select("trial_used")
+    .eq("user_id", userId)
+    .single();
+
+  const hasUsedTrial = existingData?.trial_used || false;
+
+  // Then create new subscription
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .insert({
@@ -31,7 +41,7 @@ export async function assignSubscription(
       start_date: startDate.toISOString(),
       end_date: endDate.toISOString(),
       is_recurring: isRecurring,
-      trial_used: true,
+      trial_used: plan === "Trial" || hasUsedTrial,
       subscription_status: "Active"
     })
     .select()
