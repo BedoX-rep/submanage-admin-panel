@@ -117,11 +117,12 @@ export async function checkAndRenewSubscriptions() {
   const now = new Date();
   const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
   
-  // Check for expired subscriptions
+  // Check for expired subscriptions (non-recurring and past end date)
   const { data: expiredSubscriptions, error: expiredError } = await supabaseAdmin
     .from("subscriptions")
     .select("*")
     .eq("subscription_status", "Active")
+    .eq("is_recurring", false)
     .lt("end_date", now.toISOString());
 
   if (expiredError) {
