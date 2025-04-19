@@ -113,7 +113,7 @@ const Subscriptions = () => {
       }
 
       setSubscriptions(data || []);
-      
+
       if (count !== null) {
         setTotalCount(count);
         setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
@@ -147,7 +147,7 @@ const Subscriptions = () => {
     // Run immediately and then every hour
     renewalCheck();
     const interval = setInterval(renewalCheck, 60 * 60 * 1000); // Check every hour
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -342,7 +342,7 @@ const Subscriptions = () => {
             Check Renewals
           </Button>
         </div>
-        
+
         {/* Search and filters with improved styling */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
           <form onSubmit={handleSearch} className="flex-1">
@@ -357,7 +357,7 @@ const Subscriptions = () => {
               />
             </div>
           </form>
-          
+
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center">
               <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -378,7 +378,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center">
               <Select
                 value={filters.type}
@@ -396,7 +396,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <Button 
               variant="outline" 
               onClick={() => {
@@ -482,7 +482,7 @@ const Subscriptions = () => {
                         />
                       </div>
                     </TableCell>
-                    
+
                     {/* Subscription Details Column */}
                     <TableCell>
                       <div className="flex flex-row gap-4 items-center">
@@ -514,7 +514,7 @@ const Subscriptions = () => {
                             <SelectItem value="Lifetime">Lifetime</SelectItem>
                           </SelectContent>
                         </Select>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={subscription.is_recurring}
@@ -537,7 +537,7 @@ const Subscriptions = () => {
                         </div>
                       </div>
                     </TableCell>
-                    
+
                     {/* Dates Column */}
                     <TableCell>
                       <div className="space-y-2">
@@ -555,34 +555,64 @@ const Subscriptions = () => {
                                   : <span>Select date & time</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={subscription.start_date ? new Date(subscription.start_date) : undefined}
-                                onSelect={async (date) => {
-                                  if (date) {
-                                    const dateTime = new Date(date.setHours(new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()));
-                                    try {
-                                      await updateSubscription(subscription.id, {
-                                        start_date: dateTime.toISOString()
-                                      });
-                                      fetchSubscriptions();
-                                    } catch (error) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Error",
-                                        description: "Failed to update start date"
-                                      });
+                            <PopoverContent className="w-auto p-4" align="start">
+                              <div className="space-y-2">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={subscription.start_date ? new Date(subscription.start_date) : undefined}
+                                  onSelect={async (date) => {
+                                    if (date) {
+                                      const current = subscription.start_date ? new Date(subscription.start_date) : new Date();
+                                      date.setHours(current.getHours(), current.getMinutes(), current.getSeconds());
+                                      try {
+                                        await updateSubscription(subscription.id, {
+                                          start_date: date.toISOString()
+                                        });
+                                        fetchSubscriptions();
+                                      } catch (error) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to update start date"
+                                        });
+                                      }
                                     }
-                                  }
-                                }}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
+                                  }}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="time"
+                                    step="1"
+                                    defaultValue={subscription.start_date ? 
+                                      format(new Date(subscription.start_date), "HH:mm:ss") :
+                                      format(new Date(), "HH:mm:ss")
+                                    }
+                                    onChange={async (e) => {
+                                      const [hours, minutes, seconds] = e.target.value.split(':').map(Number);
+                                      const date = subscription.start_date ? new Date(subscription.start_date) : new Date();
+                                      date.setHours(hours, minutes, seconds);
+                                      try {
+                                        await updateSubscription(subscription.id, {
+                                          start_date: date.toISOString()
+                                        });
+                                        fetchSubscriptions();
+                                      } catch (error) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to update start time"
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium w-20">End:</span>
                           <Popover>
@@ -602,30 +632,60 @@ const Subscriptions = () => {
                                   : <span>Select date & time</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={subscription.end_date ? new Date(subscription.end_date) : undefined}
-                                onSelect={async (date) => {
-                                  if (date) {
-                                    const dateTime = new Date(date.setHours(new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()));
-                                    try {
-                                      await updateSubscription(subscription.id, {
-                                        end_date: dateTime.toISOString()
-                                      });
-                                      fetchSubscriptions();
-                                    } catch (error) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Error",
-                                        description: "Failed to update end date"
-                                      });
+                            <PopoverContent className="w-auto p-4" align="start">
+                              <div className="space-y-2">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={subscription.end_date ? new Date(subscription.end_date) : undefined}
+                                  onSelect={async (date) => {
+                                    if (date) {
+                                      const current = subscription.end_date ? new Date(subscription.end_date) : new Date();
+                                      date.setHours(current.getHours(), current.getMinutes(), current.getSeconds());
+                                      try {
+                                        await updateSubscription(subscription.id, {
+                                          end_date: date.toISOString()
+                                        });
+                                        fetchSubscriptions();
+                                      } catch (error) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to update end date"
+                                        });
+                                      }
                                     }
-                                  }
-                                }}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
+                                  }}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="time"
+                                    step="1"
+                                    defaultValue={subscription.end_date ? 
+                                      format(new Date(subscription.end_date), "HH:mm:ss") :
+                                      format(new Date(), "HH:mm:ss")
+                                    }
+                                    onChange={async (e) => {
+                                      const [hours, minutes, seconds] = e.target.value.split(':').map(Number);
+                                      const date = subscription.end_date ? new Date(subscription.end_date) : new Date();
+                                      date.setHours(hours, minutes, seconds);
+                                      try {
+                                        await updateSubscription(subscription.id, {
+                                          end_date: date.toISOString()
+                                        });
+                                        fetchSubscriptions();
+                                      } catch (error) {
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to update end time"
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             </PopoverContent>
                           </Popover>
                         </div>
@@ -662,7 +722,7 @@ const Subscriptions = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    
+
                     {/* Actions Column */}
                     <TableCell className="text-right">
                       <SubscriptionActions
@@ -737,7 +797,7 @@ const Subscriptions = () => {
                       onValueChange={(value) => {
                         const startDate = new Date();
                         let endDate = new Date();
-                        
+
                         switch(value) {
                           case "Trial":
                             endDate.setDate(startDate.getDate() + 7);
@@ -752,7 +812,7 @@ const Subscriptions = () => {
                             endDate.setFullYear(startDate.getFullYear() + 200);
                             break;
                         }
-                        
+
                         setForm({
                           ...form,
                           subscription_type: value,
