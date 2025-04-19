@@ -10,7 +10,7 @@ export type Subscription = {
   end_date: string;
   subscription_type: "Trial" | "Monthly" | "Quarterly" | "Lifetime";
   trial_used: boolean;
-  subscription_status: "Active" | "Suspended" | "Cancelled";
+  subscription_status: "Active" | "inActive" | "Expired" | "Suspended" | "Cancelled";
   created_at: string;
   is_recurring: boolean;
 };

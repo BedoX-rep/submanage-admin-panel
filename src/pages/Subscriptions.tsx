@@ -258,6 +258,8 @@ const Subscriptions = () => {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="inActive">Inactive</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
                   <SelectItem value="Suspended">Suspended</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
@@ -307,6 +309,7 @@ const Subscriptions = () => {
                 <TableHead>Auto-renew</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
+                <TableHead>Created At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -399,7 +402,12 @@ const Subscriptions = () => {
                         'Not set'
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
+                        {subscription.created_at ? 
+                          format(new Date(subscription.created_at), "MMM d, yyyy HH:mm")
+                          : 'Not set'}
+                      </TableCell>
+                      <TableCell className="text-right">
                       <SubscriptionActions
                         subscription={subscription}
                         onView={handleViewDetails}
