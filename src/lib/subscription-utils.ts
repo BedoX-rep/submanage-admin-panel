@@ -118,6 +118,7 @@ export async function checkAndRenewSubscriptions() {
   const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
   
   // Check for expired subscriptions (non-recurring and past end date)
+  // Handle expired subscriptions first
   const { data: expiredSubscriptions, error: expiredError } = await supabaseAdmin
     .from("subscriptions")
     .select("*")
@@ -127,15 +128,16 @@ export async function checkAndRenewSubscriptions() {
 
   if (expiredError) {
     console.error("Error checking expired subscriptions:", expiredError);
-  } else if (expiredSubscriptions) {
-    for (const subscription of expiredSubscriptions) {
-      try {
-        await updateSubscription(subscription.id, {
-          subscription_status: "Expired"
-        });
-      } catch (error) {
-        console.error(`Error updating expired subscription ${subscription.id}:`, error);
-      }
+  } else if (expiredSubscriptions && expiredSubscriptions.length > 0) {
+    // Update all expired subscriptions in one batch
+    const expiredIds = expiredSubscriptions.map(sub => sub.id);
+    const { error: updateError } = await supabaseAdmin
+      .from("subscriptions")
+      .update({ subscription_status: "Expired" })
+      .in("id", expiredIds);
+      
+    if (updateError) {
+      console.error("Error updating expired subscriptions:", updateError);
     }
   }
 
