@@ -495,6 +495,16 @@ const Subscriptions = () => {
                           start_date: startDate.toISOString().split('T')[0],
                           end_date: endDate.toISOString().split('T')[0]
                         });
+
+                        // Also update the subscription with the new start date
+                        if (selectedSubscription) {
+                          updateSubscription(selectedSubscription.id, {
+                            subscription_type: value,
+                            subscription_status: "Active",
+                            start_date: startDate.toISOString().split('T')[0],
+                            end_date: endDate.toISOString().split('T')[0]
+                          });
+                        }
                       }}
                     >
                       <SelectTrigger id="subscription-type">

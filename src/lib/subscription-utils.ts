@@ -50,6 +50,7 @@ export async function updateSubscription(
     subscription_type: SubscriptionPlan;
     subscription_status: "Active" | "Suspended" | "Cancelled";
     is_recurring: boolean;
+    start_date: string;
     end_date: string;
   }>
 ) {
