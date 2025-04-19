@@ -11,14 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,31 +19,13 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, isAfter, parseISO } from "date-fns";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  ChevronLeft, 
-  ChevronRight,
-  Search,
-  Filter,
-  RefreshCw,
-  Calendar
-} from "lucide-react";
+import { format } from "date-fns";
+import { Search, Filter, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { 
-  updateSubscription, 
-  deleteSubscription, 
-  removeSubscription, 
-  SubscriptionPlan, 
-  checkAndRenewSubscriptions 
-} from "@/lib/subscription-utils";
+import { SubscriptionPlan, checkAndRenewSubscriptions, updateSubscription, deleteSubscription, removeSubscription } from "@/lib/subscription-utils";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
+import { SubscriptionDatePicker } from "@/components/SubscriptionDatePicker";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
@@ -63,23 +37,12 @@ const Subscriptions = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: "all",
     type: "all",
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const { toast } = useToast();
 
-  // Form state for editing
-  const [form, setForm] = useState({
-    subscription_type: "",
-    subscription_status: "",
-    end_date: "",
-    trial_used: false,
-    is_recurring: false,
-  });
+  const { toast } = useToast();
 
   const fetchSubscriptions = async () => {
     setIsLoading(true);
@@ -160,52 +123,20 @@ const Subscriptions = () => {
     setCurrentPage(1); // Reset to first page on new search
   };
 
-  const handleEdit = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-    setForm({
-      subscription_type: subscription.subscription_type,
-      subscription_status: subscription.subscription_status,
-      end_date: new Date(subscription.end_date).toISOString().split("T")[0],
-      trial_used: subscription.trial_used,
-      is_recurring: subscription.is_recurring,
-    });
-    setIsEditing(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleViewDetails = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-    setIsEditing(false);
-    setIsDialogOpen(true);
-  };
-
-  const handleUpdateSubscription = async () => {
-    if (!selectedSubscription || !form) return;
-
+  const handleDeleteSubscription = async (subscriptionId: string) => {
     try {
-      const updates = {
-        subscription_type: form.subscription_type as SubscriptionPlan,
-        subscription_status: form.subscription_status as any,
-        is_recurring: form.is_recurring,
-        end_date: form.end_date,
-        trial_used: form.subscription_type === "Trial" || form.trial_used
-      };
-
-      await updateSubscription(selectedSubscription.id, updates);
-
+      await deleteSubscription(subscriptionId);
       toast({
         title: "Success",
-        description: "Subscription updated successfully",
+        description: "Subscription deleted successfully",
       });
-
       await fetchSubscriptions();
-      setIsDialogOpen(false);
     } catch (error) {
-      console.error("Error updating subscription:", error);
+      console.error("Error deleting subscription:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update subscription",
+        description: "Failed to delete subscription",
       });
     }
   };
@@ -228,130 +159,47 @@ const Subscriptions = () => {
     }
   };
 
-  const handleDeleteSubscription = async (subscriptionId: string) => {
-    try {
-      await deleteSubscription(subscriptionId);
-      toast({
-        title: "Success",
-        description: "Subscription deleted successfully",
-      });
-      await fetchSubscriptions();
-    } catch (error) {
-      console.error("Error deleting subscription:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete subscription",
-      });
-    }
-  };
-
-  const renderStatusBadge = (status: Subscription["subscription_status"]) => {
-    switch (status) {
-      case "Active":
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Active
-          </Badge>
-        );
-      case "Suspended":
-        return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            Suspended
-          </Badge>
-        );
-      case "Cancelled":
-        return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-            <XCircle className="w-3 h-3 mr-1" />
-            Cancelled
-          </Badge>
-        );
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-
-  const DatePickerField = ({ 
-    date, 
-    onChange, 
-    label = "Date",
-    disabled = false
-  }: { 
-    date: string | null, 
-    onChange: (date: string) => void, 
-    label?: string,
-    disabled?: boolean 
-  }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          disabled={disabled}
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <Calendar className="mr-2 h-4 w-4" />
-          {date ? format(parseISO(date), "MMM d, yyyy") : <span>Select date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <CalendarComponent
-          mode="single"
-          selected={date ? parseISO(date) : undefined}
-          onSelect={(selectedDate) => {
-            if (selectedDate) {
-              onChange(selectedDate.toISOString());
-            }
-          }}
-          initialFocus
-          className="pointer-events-auto p-3"
-        />
-      </PopoverContent>
-    </Popover>
-  );
-
   return (
     <AdminLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
-          <Button onClick={async () => {
-            try {
-              const result = await checkAndRenewSubscriptions();
-              toast({
-                title: "Renewal Check",
-                description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
-              });
-              if (result.renewed > 0) {
-                fetchSubscriptions();
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            Subscriptions
+          </h1>
+          <Button 
+            onClick={async () => {
+              try {
+                const result = await checkAndRenewSubscriptions();
+                toast({
+                  title: "Renewal Check",
+                  description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
+                });
+                if (result.renewed > 0) {
+                  fetchSubscriptions();
+                }
+              } catch (error) {
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Failed to check subscriptions for renewal",
+                });
               }
-            } catch (error) {
-              toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to check subscriptions for renewal",
-              });
-            }
-          }}>
+            }}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Check Renewals
           </Button>
         </div>
         
-        {/* Search and filters with improved styling */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <form onSubmit={handleSearch} className="flex-1">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
                 placeholder="Search by email or name..."
-                className="pl-8"
+                className="pl-10 bg-gray-50 border-gray-200"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -359,13 +207,13 @@ const Subscriptions = () => {
           </form>
           
           <div className="flex flex-wrap gap-2">
-            <div className="flex items-center">
-              <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
               <Select
                 value={filters.status}
                 onValueChange={(value) => setFilters({ ...filters, status: value })}
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] bg-gray-50 border-gray-200">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -379,23 +227,21 @@ const Subscriptions = () => {
               </Select>
             </div>
             
-            <div className="flex items-center">
-              <Select
-                value={filters.type}
-                onValueChange={(value) => setFilters({ ...filters, type: value })}
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Trial">Trial</SelectItem>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
-                  <SelectItem value="Quarterly">Quarterly</SelectItem>
-                  <SelectItem value="Lifetime">Lifetime</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select
+              value={filters.type}
+              onValueChange={(value) => setFilters({ ...filters, type: value })}
+            >
+              <SelectTrigger className="w-[150px] bg-gray-50 border-gray-200">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Trial">Trial</SelectItem>
+                <SelectItem value="Monthly">Monthly</SelectItem>
+                <SelectItem value="Quarterly">Quarterly</SelectItem>
+                <SelectItem value="Lifetime">Lifetime</SelectItem>
+              </SelectContent>
+            </Select>
             
             <Button 
               variant="outline" 
@@ -403,7 +249,7 @@ const Subscriptions = () => {
                 setFilters({ status: "all", type: "all" });
                 setSearchTerm("");
               }}
-              className="gap-1"
+              className="gap-1 border-gray-200 hover:bg-gray-50"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Reset
@@ -411,16 +257,15 @@ const Subscriptions = () => {
           </div>
         </div>
 
-        {/* Table with improved styling */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
-                <TableHead className="py-3">User</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Dates</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="py-3 font-semibold text-gray-600">User</TableHead>
+                <TableHead className="font-semibold text-gray-600">Subscription</TableHead>
+                <TableHead className="font-semibold text-gray-600">Dates</TableHead>
+                <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                <TableHead className="text-right font-semibold text-gray-600">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -428,21 +273,20 @@ const Subscriptions = () => {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin-primary"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600"></div>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : subscriptions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                     No subscriptions found
                   </TableCell>
                 </TableRow>
               ) : (
                 subscriptions.map((subscription) => (
                   <TableRow key={subscription.id} className="hover:bg-gray-50">
-                    {/* User Column */}
-                    <TableCell className="max-w-[250px]">
+                    <TableCell className="py-4">
                       <div className="space-y-1">
                         <Input
                           value={subscription.display_name}
@@ -460,7 +304,7 @@ const Subscriptions = () => {
                               });
                             }
                           }}
-                          className="font-medium mb-1"
+                          className="font-medium bg-transparent border-transparent hover:border-gray-200 focus:border-purple-500 focus:bg-white"
                         />
                         <Input
                           value={subscription.email}
@@ -478,14 +322,25 @@ const Subscriptions = () => {
                               });
                             }
                           }}
-                          className="text-sm text-muted-foreground"
+                          className="text-sm text-gray-500 bg-transparent border-transparent hover:border-gray-200 focus:border-purple-500 focus:bg-white"
                         />
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline" className={
+                            subscription.trial_used 
+                              ? "bg-orange-100 text-orange-800 hover:bg-orange-100" 
+                              : "bg-green-100 text-green-800 hover:bg-green-100"
+                          }>
+                            Trial {subscription.trial_used ? "Used" : "Available"}
+                          </Badge>
+                          <span className="text-xs text-gray-400">
+                            Created: {format(new Date(subscription.created_at), "MMM d, yyyy")}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
                     
-                    {/* Subscription Details Column */}
                     <TableCell>
-                      <div className="flex flex-row gap-4 items-center">
+                      <div className="flex flex-col gap-2">
                         <Select
                           value={subscription.subscription_type || ""}
                           onValueChange={async (value) => {
@@ -504,7 +359,7 @@ const Subscriptions = () => {
                             }
                           }}
                         >
-                          <SelectTrigger className="w-[120px]">
+                          <SelectTrigger className="w-[120px] bg-gray-50 border-gray-200">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -515,7 +370,7 @@ const Subscriptions = () => {
                           </SelectContent>
                         </Select>
                         
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <Switch
                             checked={subscription.is_recurring}
                             onCheckedChange={async (checked) => {
@@ -533,106 +388,57 @@ const Subscriptions = () => {
                               }
                             }}
                           />
-                          <span className="text-sm">Auto-renew</span>
+                          <span className="text-sm text-gray-600">Auto-renew</span>
                         </div>
                       </div>
                     </TableCell>
                     
-                    {/* Dates Column */}
                     <TableCell>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium w-20">Start:</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-[200px] justify-start text-left font-normal"
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {subscription.start_date ? 
-                                  format(new Date(subscription.start_date), "MMM d, yyyy HH:mm:ss") 
-                                  : <span>Select date & time</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={subscription.start_date ? new Date(subscription.start_date) : undefined}
-                                onSelect={async (date) => {
-                                  if (date) {
-                                    const dateTime = new Date(date.setHours(new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()));
-                                    try {
-                                      await updateSubscription(subscription.id, {
-                                        start_date: dateTime.toISOString()
-                                      });
-                                      fetchSubscriptions();
-                                    } catch (error) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Error",
-                                        description: "Failed to update start date"
-                                      });
-                                    }
-                                  }
-                                }}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <span className="text-xs font-medium text-gray-500">Start Date</span>
+                          <SubscriptionDatePicker
+                            date={subscription.start_date ? new Date(subscription.start_date) : null}
+                            onSelect={async (date) => {
+                              try {
+                                await updateSubscription(subscription.id, {
+                                  start_date: date.toISOString()
+                                });
+                                await fetchSubscriptions();
+                              } catch (error) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error",
+                                  description: "Failed to update start date"
+                                });
+                              }
+                            }}
+                          />
                         </div>
                         
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium w-20">End:</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-[200px] justify-start text-left font-normal",
-                                  subscription.end_date && isAfter(new Date(subscription.end_date), new Date())
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                )}
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {subscription.end_date ? 
-                                  format(new Date(subscription.end_date), "MMM d, yyyy HH:mm:ss")
-                                  : <span>Select date & time</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={subscription.end_date ? new Date(subscription.end_date) : undefined}
-                                onSelect={async (date) => {
-                                  if (date) {
-                                    const dateTime = new Date(date.setHours(new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()));
-                                    try {
-                                      await updateSubscription(subscription.id, {
-                                        end_date: dateTime.toISOString()
-                                      });
-                                      fetchSubscriptions();
-                                    } catch (error) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Error",
-                                        description: "Failed to update end date"
-                                      });
-                                    }
-                                  }
-                                }}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                        <div className="space-y-1">
+                          <span className="text-xs font-medium text-gray-500">End Date</span>
+                          <SubscriptionDatePicker
+                            date={subscription.end_date ? new Date(subscription.end_date) : null}
+                            onSelect={async (date) => {
+                              try {
+                                await updateSubscription(subscription.id, {
+                                  end_date: date.toISOString()
+                                });
+                                await fetchSubscriptions();
+                              } catch (error) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error",
+                                  description: "Failed to update end date"
+                                });
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                     </TableCell>
 
-                    {/* Status Column */}
                     <TableCell>
                       <Select
                         value={subscription.subscription_status}
@@ -651,7 +457,7 @@ const Subscriptions = () => {
                           }
                         }}
                       >
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger className="w-[120px] bg-gray-50 border-gray-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -663,12 +469,9 @@ const Subscriptions = () => {
                       </Select>
                     </TableCell>
                     
-                    {/* Actions Column */}
                     <TableCell className="text-right">
                       <SubscriptionActions
                         subscription={subscription}
-                        onView={handleViewDetails}
-                        onEdit={handleEdit}
                         onDelete={handleDeleteSubscription}
                         onRemove={handleRemoveSubscription}
                       />
@@ -682,8 +485,8 @@ const Subscriptions = () => {
 
         {/* Pagination with improved styling */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between mt-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="text-sm text-gray-500">
               Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
               {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} results
             </div>
@@ -693,10 +496,11 @@ const Subscriptions = () => {
                 size="icon"
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
+                className="border-gray-200 hover:bg-gray-50"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="text-sm">
+              <div className="text-sm text-gray-600">
                 Page {currentPage} of {totalPages}
               </div>
               <Button
@@ -704,192 +508,13 @@ const Subscriptions = () => {
                 size="icon"
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
+                className="border-gray-200 hover:bg-gray-50"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         )}
-
-        {/* Details Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {isEditing
-                  ? "Edit Subscription"
-                  : `Subscription Details`}
-              </DialogTitle>
-              <DialogDescription>
-                {isEditing
-                  ? "Update the subscription information below."
-                  : `Viewing details for ${selectedSubscription?.display_name}'s subscription.`}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              {isEditing ? (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="subscription-type">Subscription Type</Label>
-                    <Select
-                      value={form.subscription_type}
-                      onValueChange={(value) => {
-                        const startDate = new Date();
-                        let endDate = new Date();
-                        
-                        switch(value) {
-                          case "Trial":
-                            endDate.setDate(startDate.getDate() + 7);
-                            break;
-                          case "Monthly":
-                            endDate.setDate(startDate.getDate() + 31);
-                            break;
-                          case "Quarterly":
-                            endDate.setDate(startDate.getDate() + 90);
-                            break;
-                          case "Lifetime":
-                            endDate.setFullYear(startDate.getFullYear() + 200);
-                            break;
-                        }
-                        
-                        setForm({
-                          ...form,
-                          subscription_type: value,
-                          subscription_status: "Active",
-                          trial_used: value === "Trial" ? true : form.trial_used,
-                          end_date: endDate.toISOString().split('T')[0]
-                        });
-
-                        // Also update the subscription with the new dates
-                        if (selectedSubscription) {
-                          updateSubscription(selectedSubscription.id, {
-                            subscription_type: value as SubscriptionPlan,
-                            subscription_status: "Active",
-                            start_date: startDate.toISOString(),
-                            end_date: endDate.toISOString()
-                          });
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="subscription-type">
-                        <SelectValue placeholder="Select subscription type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Trial">Trial</SelectItem>
-                        <SelectItem value="Monthly">Monthly</SelectItem>
-                        <SelectItem value="Quarterly">Quarterly</SelectItem>
-                        <SelectItem value="Lifetime">Lifetime</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                    <DatePickerField
-                      date={form.end_date ? new Date(form.end_date).toISOString() : null}
-                      onChange={(date) => setForm({ ...form, end_date: new Date(date).toISOString().split('T')[0] })}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="trial-used"
-                      checked={form.trial_used}
-                      onCheckedChange={(checked) =>
-                        setForm({ ...form, trial_used: checked })
-                      }
-                    />
-                    <Label htmlFor="trial-used">Trial Used</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="auto-renew"
-                      checked={form.is_recurring}
-                      onCheckedChange={(checked) =>
-                        setForm({ ...form, is_recurring: checked })
-                      }
-                    />
-                    <Label htmlFor="auto-renew">Auto-renew Subscription</Label>
-                  </div>
-                </>
-              ) : (
-                selectedSubscription && (
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-sm font-medium">User:</div>
-                      <div>{selectedSubscription.display_name} ({selectedSubscription.email})</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Subscription Type:</div>
-                      <div>{selectedSubscription.subscription_type}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Status:</div>
-                      <div className="flex items-center">
-                        {renderStatusBadge(selectedSubscription.subscription_status)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Start Date:</div>
-                      <div>
-                        {format(new Date(selectedSubscription.start_date), "MMMM d, yyyy")}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">End Date:</div>
-                      <div>
-                        {format(new Date(selectedSubscription.end_date), "MMMM d, yyyy")}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Trial Used:</div>
-                      <div>{selectedSubscription.trial_used ? "Yes" : "No"}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Created At:</div>
-                      <div>
-                        {format(new Date(selectedSubscription.created_at), "MMMM d, yyyy HH:mm")}
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-
-            <DialogFooter>
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleUpdateSubscription}>Save Changes</Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => {
-                      if (selectedSubscription) {
-                        handleEdit(selectedSubscription);
-                      }
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </AdminLayout>
   );
