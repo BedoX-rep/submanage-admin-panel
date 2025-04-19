@@ -338,7 +338,7 @@ const Subscriptions = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {subscription.subscription_type}
+                        {subscription.subscription_type || 'No subscription'}
                       </Badge>
                       {subscription.trial_used && (
                         <Badge variant="secondary" className="ml-2">
@@ -381,17 +381,23 @@ const Subscriptions = () => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(subscription.start_date), "MMM d, yyyy")}
+                      {subscription.start_date 
+                        ? format(new Date(subscription.start_date), "MMM d, yyyy")
+                        : 'Not set'}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {format(new Date(subscription.end_date), "MMM d, yyyy")}
-                        {isAfter(new Date(subscription.end_date), new Date()) ? (
-                          <Badge variant="outline" className="bg-green-50">Active</Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-50">Expired</Badge>
-                        )}
-                      </div>
+                      {subscription.end_date ? (
+                        <div className="flex items-center gap-2">
+                          {format(new Date(subscription.end_date), "MMM d, yyyy")}
+                          {isAfter(new Date(subscription.end_date), new Date()) ? (
+                            <Badge variant="outline" className="bg-green-50">Active</Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-red-50">Expired</Badge>
+                          )}
+                        </div>
+                      ) : (
+                        'Not set'
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <SubscriptionActions
