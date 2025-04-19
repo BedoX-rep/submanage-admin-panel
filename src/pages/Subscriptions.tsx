@@ -152,11 +152,6 @@ const Subscriptions = () => {
   }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(fetchSubscriptions, 1000); // Refresh every second
-    return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
     fetchSubscriptions();
   }, [currentPage, searchTerm, filters]);
 
