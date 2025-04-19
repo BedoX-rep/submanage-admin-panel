@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +43,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { updateSubscription, deleteSubscription, removeSubscription } from "@/lib/subscription-utils";
+import { updateSubscription, deleteSubscription, removeSubscription, SubscriptionPlan } from "@/lib/subscription-utils";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 
 const ITEMS_PER_PAGE = 10;
@@ -57,8 +58,8 @@ const Subscriptions = () => {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
-    status: "all", // Changed from empty string to "all"
-    type: "all",   // Changed from empty string to "all"
+    status: "all",
+    type: "all",
   });
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
@@ -154,7 +155,7 @@ const Subscriptions = () => {
 
     try {
       const updates = {
-        subscription_type: form.subscription_type as any,
+        subscription_type: form.subscription_type as SubscriptionPlan,
         subscription_status: form.subscription_status as any,
         is_recurring: form.is_recurring,
         end_date: form.end_date,
@@ -398,7 +399,7 @@ const Subscriptions = () => {
                         onValueChange={async (value) => {
                           try {
                             await updateSubscription(subscription.id, {
-                              subscription_type: value as any,
+                              subscription_type: value as SubscriptionPlan,
                               trial_used: value === "Trial" || subscription.trial_used
                             });
                             await fetchSubscriptions();
@@ -626,17 +627,16 @@ const Subscriptions = () => {
                           subscription_type: value,
                           subscription_status: "Active",
                           trial_used: value === "Trial" ? true : form.trial_used,
-                          start_date: startDate.toISOString().split('T')[0],
                           end_date: endDate.toISOString().split('T')[0]
                         });
 
-                        // Also update the subscription with the new start date
+                        // Also update the subscription with the new dates
                         if (selectedSubscription) {
                           updateSubscription(selectedSubscription.id, {
-                            subscription_type: value,
+                            subscription_type: value as SubscriptionPlan,
                             subscription_status: "Active",
-                            start_date: startDate.toISOString().split('T')[0],
-                            end_date: endDate.toISOString().split('T')[0]
+                            start_date: startDate.toISOString(),
+                            end_date: endDate.toISOString()
                           });
                         }
                       }}

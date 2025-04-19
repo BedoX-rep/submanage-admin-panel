@@ -58,10 +58,13 @@ export async function updateSubscription(
   subscriptionId: string,
   updates: Partial<{
     subscription_type: SubscriptionPlan;
-    subscription_status: "Active" | "Suspended" | "Cancelled";
+    subscription_status: "Active" | "inActive" | "Expired" | "Suspended" | "Cancelled";
     is_recurring: boolean;
     start_date: string;
     end_date: string;
+    trial_used: boolean;
+    email: string;
+    display_name: string;
   }>
 ) {
   const { data, error } = await supabaseAdmin
