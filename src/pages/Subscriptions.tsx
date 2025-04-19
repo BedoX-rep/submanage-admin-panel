@@ -104,7 +104,7 @@ const Subscriptions = () => {
       }
 
       setSubscriptions(data || []);
-
+      
       if (count !== null) {
         setTotalCount(count);
         setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
@@ -218,20 +218,6 @@ const Subscriptions = () => {
             Cancelled
           </Badge>
         );
-      case "Expired":
-        return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-            <XCircle className="w-3 h-3 mr-1" />
-            Expired
-          </Badge>
-        );
-      case "inActive":
-        return (
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-            <XCircle className="w-3 h-3 mr-1" />
-            Inactive
-          </Badge>
-        );
       default:
         return <Badge>{status}</Badge>;
     }
@@ -243,7 +229,7 @@ const Subscriptions = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
         </div>
-
+        
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <form onSubmit={handleSearch} className="flex-1">
@@ -258,7 +244,7 @@ const Subscriptions = () => {
               />
             </div>
           </form>
-
+          
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center">
               <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -272,14 +258,12 @@ const Subscriptions = () => {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="inActive">inActive</SelectItem>
-                  <SelectItem value="Expired">Expired</SelectItem>
                   <SelectItem value="Suspended">Suspended</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="flex items-center">
               <Select
                 value={filters.type}
@@ -297,7 +281,7 @@ const Subscriptions = () => {
                 </SelectContent>
               </Select>
             </div>
-
+            
             <Button 
               variant="outline" 
               onClick={() => {
@@ -323,7 +307,6 @@ const Subscriptions = () => {
                 <TableHead>Auto-renew</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
-                <TableHead>Created At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -347,73 +330,16 @@ const Subscriptions = () => {
                   <TableRow key={subscription.id}>
                     <TableCell>
                       <div>
-                        <Input 
-                          className="font-medium mb-1"
-                          value={subscription.display_name}
-                          onChange={async (e) => {
-                            try {
-                              await updateSubscription(subscription.id, {
-                                display_name: e.target.value
-                              });
-                              await fetchSubscriptions();
-                            } catch (error) {
-                              toast({
-                                variant: "destructive",
-                                title: "Error",
-                                description: "Failed to update display name"
-                              });
-                            }
-                          }}
-                        />
-                        <Input 
-                          className="text-sm text-muted-foreground"
-                          value={subscription.email}
-                          onChange={async (e) => {
-                            try {
-                              await updateSubscription(subscription.id, {
-                                email: e.target.value
-                              });
-                              await fetchSubscriptions();
-                            } catch (error) {
-                              toast({
-                                variant: "destructive",
-                                title: "Error",
-                                description: "Failed to update email"
-                              });
-                            }
-                          }}
-                        />
+                        <div className="font-medium">{subscription.display_name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {subscription.email}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={subscription.subscription_type || ""}
-                        onValueChange={async (value) => {
-                          try {
-                            await updateSubscription(subscription.id, {
-                              subscription_type: value as any
-                            });
-                            await fetchSubscriptions();
-                          } catch (error) {
-                            toast({
-                              variant: "destructive",
-                              title: "Error",
-                              description: "Failed to update subscription type"
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">No subscription</SelectItem>
-                          <SelectItem value="Trial">Trial</SelectItem>
-                          <SelectItem value="Monthly">Monthly</SelectItem>
-                          <SelectItem value="Quarterly">Quarterly</SelectItem>
-                          <SelectItem value="Lifetime">Lifetime</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Badge variant="outline">
+                        {subscription.subscription_type || 'No subscription'}
+                      </Badge>
                       {subscription.trial_used && (
                         <Badge variant="secondary" className="ml-2">
                           Trial Used
@@ -421,34 +347,7 @@ const Subscriptions = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={subscription.subscription_status}
-                        onValueChange={async (value) => {
-                          try {
-                            await updateSubscription(subscription.id, {
-                              subscription_status: value as any
-                            });
-                            await fetchSubscriptions();
-                          } catch (error) {
-                            toast({
-                              variant: "destructive",
-                              title: "Error",
-                              description: "Failed to update status"
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="inActive">inActive</SelectItem>
-                          <SelectItem value="Expired">Expired</SelectItem>
-                          <SelectItem value="Suspended">Suspended</SelectItem>
-                          <SelectItem value="Cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {renderStatusBadge(subscription.subscription_status)}
                     </TableCell>
                     <TableCell>
                       <Select
@@ -482,60 +381,23 @@ const Subscriptions = () => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Input 
-                        type="date"
-                        className="w-40"
-                        value={subscription.start_date ? new Date(subscription.start_date).toISOString().split('T')[0] : ''}
-                        onChange={async (e) => {
-                          try {
-                            await updateSubscription(subscription.id, {
-                              start_date: e.target.value
-                            });
-                            await fetchSubscriptions();
-                          } catch (error) {
-                            toast({
-                              variant: "destructive",
-                              title: "Error",
-                              description: "Failed to update start date"
-                            });
-                          }
-                        }}
-                      />
+                      {subscription.start_date 
+                        ? format(new Date(subscription.start_date), "MMM d, yyyy")
+                        : 'Not set'}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          type="date"
-                          className="w-40"
-                          value={subscription.end_date ? new Date(subscription.end_date).toISOString().split('T')[0] : ''}
-                          onChange={async (e) => {
-                            try {
-                              await updateSubscription(subscription.id, {
-                                end_date: e.target.value
-                              });
-                              await fetchSubscriptions();
-                            } catch (error) {
-                              toast({
-                                variant: "destructive",
-                                title: "Error",
-                                description: "Failed to update end date"
-                              });
-                            }
-                          }}
-                        />
-                        {subscription.end_date && (
-                          isAfter(new Date(subscription.end_date), new Date()) ? (
+                      {subscription.end_date ? (
+                        <div className="flex items-center gap-2">
+                          {format(new Date(subscription.end_date), "MMM d, yyyy")}
+                          {isAfter(new Date(subscription.end_date), new Date()) ? (
                             <Badge variant="outline" className="bg-green-50">Active</Badge>
                           ) : (
                             <Badge variant="outline" className="bg-red-50">Expired</Badge>
-                          )
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {subscription.created_at ? 
-                        format(new Date(subscription.created_at), "MMM d, yyyy HH:mm") 
-                        : 'Not set'}
+                          )}
+                        </div>
+                      ) : (
+                        'Not set'
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <SubscriptionActions
@@ -609,7 +471,7 @@ const Subscriptions = () => {
                       onValueChange={(value) => {
                         const startDate = new Date();
                         let endDate = new Date();
-
+                        
                         switch(value) {
                           case "Trial":
                             endDate.setDate(startDate.getDate() + 7);
@@ -624,7 +486,7 @@ const Subscriptions = () => {
                             endDate.setFullYear(startDate.getFullYear() + 200);
                             break;
                         }
-
+                        
                         setForm({
                           ...form,
                           subscription_type: value,
