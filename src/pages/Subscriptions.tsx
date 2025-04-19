@@ -153,12 +153,15 @@ const Subscriptions = () => {
     if (!selectedSubscription || !form) return;
 
     try {
-      await updateSubscription(selectedSubscription.id, {
+      const updates = {
         subscription_type: form.subscription_type as any,
         subscription_status: form.subscription_status as any,
         is_recurring: form.is_recurring,
         end_date: form.end_date,
-      });
+        trial_used: form.subscription_type === "Trial" || form.trial_used
+      };
+
+      await updateSubscription(selectedSubscription.id, updates);
 
       toast({
         title: "Success",
@@ -351,24 +354,128 @@ const Subscriptions = () => {
                   <TableRow key={subscription.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{subscription.display_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {subscription.email}
-                        </div>
+                        <Input
+                          value={subscription.display_name}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                display_name: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update display name"
+                              });
+                            }
+                          }}
+                          className="font-medium"
+                        />
+                        <Input
+                          value={subscription.email}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                email: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update email"
+                              });
+                            }
+                          }}
+                          className="text-sm text-muted-foreground mt-1"
+                        />
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {subscription.subscription_type || 'No subscription'}
-                      </Badge>
-                      {subscription.trial_used && (
-                        <Badge variant="secondary" className="ml-2">
+                      <Select
+                        value={subscription.subscription_type || ""}
+                        onValueChange={async (value) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              subscription_type: value as any,
+                              trial_used: value === "Trial" || subscription.trial_used
+                            });
+                            await fetchSubscriptions();
+                            toast({
+                              title: "Success",
+                              description: "Subscription type updated"
+                            });
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update subscription type"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Trial">Trial</SelectItem>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Quarterly">Quarterly</SelectItem>
+                          <SelectItem value="Lifetime">Lifetime</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="mt-1">
+                        <Switch
+                          checked={subscription.trial_used}
+                          onCheckedChange={async (checked) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                trial_used: checked
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update trial status"
+                              });
+                            }
+                          }}
+                        />
+                        <span className="ml-2 text-sm text-muted-foreground">
                           Trial Used
-                        </Badge>
-                      )}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {renderStatusBadge(subscription.subscription_status)}
+                      <Select
+                        value={subscription.subscription_status}
+                        onValueChange={async (value) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              subscription_status: value as any
+                            });
+                            await fetchSubscriptions();
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update status"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="inActive">Inactive</SelectItem>
+                          <SelectItem value="Suspended">Suspended</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Select

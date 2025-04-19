@@ -187,9 +187,9 @@ export type Database = {
           created_at: string | null
           display_name: string
           email: string
-          end_date: string
+          end_date: string | null
           id: string
-          is_recurring: boolean
+          is_recurring: boolean | null
           start_date: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           subscription_type:
@@ -202,9 +202,9 @@ export type Database = {
           created_at?: string | null
           display_name?: string
           email?: string
-          end_date: string
+          end_date?: string | null
           id?: string
-          is_recurring?: boolean
+          is_recurring?: boolean | null
           start_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           subscription_type?:
@@ -217,9 +217,9 @@ export type Database = {
           created_at?: string | null
           display_name?: string
           email?: string
-          end_date?: string
+          end_date?: string | null
           id?: string
-          is_recurring?: boolean
+          is_recurring?: boolean | null
           start_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           subscription_type?:
@@ -257,7 +257,12 @@ export type Database = {
       }
     }
     Enums: {
-      subscription_status: "Active" | "Suspended" | "Cancelled"
+      subscription_status:
+        | "Active"
+        | "Suspended"
+        | "Cancelled"
+        | "inActive"
+        | "Expired"
       subscription_type: "Trial" | "Monthly" | "Quarterly" | "Lifetime"
     }
     CompositeTypes: {
@@ -374,7 +379,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      subscription_status: ["Active", "Suspended", "Cancelled"],
+      subscription_status: [
+        "Active",
+        "Suspended",
+        "Cancelled",
+        "inActive",
+        "Expired",
+      ],
       subscription_type: ["Trial", "Monthly", "Quarterly", "Lifetime"],
     },
   },
