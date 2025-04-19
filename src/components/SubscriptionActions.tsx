@@ -30,6 +30,7 @@ export function SubscriptionActions({
           variant="ghost"
           size="icon"
           onClick={() => onView(subscription)}
+          className="text-purple-500 hover:text-purple-600 hover:bg-purple-50"
         >
           <span className="sr-only">View details</span>
           <Eye className="h-4 w-4" />
@@ -38,6 +39,7 @@ export function SubscriptionActions({
           variant="ghost"
           size="icon"
           onClick={() => onEdit(subscription)}
+          className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
         >
           <span className="sr-only">Edit</span>
           <Edit className="h-4 w-4" />
@@ -46,7 +48,7 @@ export function SubscriptionActions({
           variant="ghost"
           size="icon"
           onClick={() => setIsRemoveDialogOpen(true)}
-          className="text-amber-500 hover:text-amber-600"
+          className="text-amber-500 hover:text-amber-600 hover:bg-amber-50"
         >
           <span className="sr-only">Remove Subscription</span>
           <Ban className="h-4 w-4" />
@@ -55,7 +57,7 @@ export function SubscriptionActions({
           variant="ghost"
           size="icon"
           onClick={() => setIsDeleteDialogOpen(true)}
-          className="text-red-500 hover:text-red-600"
+          className="text-red-500 hover:text-red-600 hover:bg-red-50"
         >
           <span className="sr-only">Delete</span>
           <Trash2 className="h-4 w-4" />
