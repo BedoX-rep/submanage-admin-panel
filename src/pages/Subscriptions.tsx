@@ -468,9 +468,34 @@ const Subscriptions = () => {
                     <Label htmlFor="subscription-type">Subscription Type</Label>
                     <Select
                       value={form.subscription_type}
-                      onValueChange={(value) =>
-                        setForm({ ...form, subscription_type: value })
-                      }
+                      onValueChange={(value) => {
+                        const startDate = new Date();
+                        let endDate = new Date();
+                        
+                        switch(value) {
+                          case "Trial":
+                            endDate.setDate(startDate.getDate() + 7);
+                            break;
+                          case "Monthly":
+                            endDate.setDate(startDate.getDate() + 31);
+                            break;
+                          case "Quarterly":
+                            endDate.setDate(startDate.getDate() + 90);
+                            break;
+                          case "Lifetime":
+                            endDate.setFullYear(startDate.getFullYear() + 200);
+                            break;
+                        }
+                        
+                        setForm({
+                          ...form,
+                          subscription_type: value,
+                          subscription_status: "Active",
+                          trial_used: value === "Trial" ? true : form.trial_used,
+                          start_date: startDate.toISOString().split('T')[0],
+                          end_date: endDate.toISOString().split('T')[0]
+                        });
+                      }}
                     >
                       <SelectTrigger id="subscription-type">
                         <SelectValue placeholder="Select subscription type" />
@@ -482,37 +507,6 @@ const Subscriptions = () => {
                         <SelectItem value="Lifetime">Lifetime</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="subscription-status">Status</Label>
-                    <Select
-                      value={form.subscription_status}
-                      onValueChange={(value) =>
-                        setForm({ ...form, subscription_status: value })
-                      }
-                    >
-                      <SelectTrigger id="subscription-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Suspended">Suspended</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                    <Input
-                      id="end-date"
-                      type="date"
-                      value={form.end_date}
-                      onChange={(e) =>
-                        setForm({ ...form, end_date: e.target.value })
-                      }
-                    />
                   </div>
 
                   <div className="flex items-center space-x-2">
