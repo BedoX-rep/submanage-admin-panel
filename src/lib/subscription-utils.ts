@@ -128,16 +128,19 @@ export async function checkAndRenewSubscriptions() {
 
   if (expiredError) {
     console.error("Error checking expired subscriptions:", expiredError);
-  } else if (expiredSubscriptions && expiredSubscriptions.length > 0) {
+    return { success: false, error: expiredError };
+  }
+
+  if (expiredSubscriptions && expiredSubscriptions.length > 0) {
     // Update all expired subscriptions in one batch
-    const expiredIds = expiredSubscriptions.map(sub => sub.id);
     const { error: updateError } = await supabaseAdmin
       .from("subscriptions")
       .update({ subscription_status: "Expired" })
-      .in("id", expiredIds);
+      .in("id", expiredSubscriptions.map(sub => sub.id));
       
     if (updateError) {
       console.error("Error updating expired subscriptions:", updateError);
+      return { success: false, error: updateError };
     }
   }
 

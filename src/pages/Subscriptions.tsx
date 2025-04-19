@@ -135,9 +135,11 @@ const Subscriptions = () => {
     const renewalCheck = async () => {
       try {
         const result = await checkAndRenewSubscriptions();
-        if (result.renewed > 0) {
-          console.log(`Renewed ${result.renewed} subscriptions`);
-          fetchSubscriptions(); // Refresh the list after renewals
+        if (result.subscriptions) {
+          setSubscriptions(result.subscriptions);
+          if (result.renewed > 0 || result.expired > 0) {
+            console.log(`Renewed ${result.renewed} subscriptions, Expired ${result.expired} subscriptions`);
+          }
         }
       } catch (error) {
         console.error("Error during subscription renewal check:", error);
