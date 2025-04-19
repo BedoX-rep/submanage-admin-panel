@@ -19,7 +19,8 @@ export async function assignSubscription(
   isRecurring: boolean = false
 ) {
   const startDate = new Date();
-  const endDate = addDays(startDate, SUBSCRIPTION_DURATIONS[plan]);
+  // Calculate exact end date based on current time
+  const endDate = new Date(startDate.getTime() + (SUBSCRIPTION_DURATIONS[plan] * 24 * 60 * 60 * 1000));
 
   // First, check if user has used trial before
   const { data: existingData } = await supabaseAdmin
@@ -30,7 +31,7 @@ export async function assignSubscription(
 
   const hasUsedTrial = existingData?.trial_used || false;
 
-  // Then create new subscription
+  // Then create new subscription with precise timestamps
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .insert({
