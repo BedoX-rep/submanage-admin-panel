@@ -307,6 +307,7 @@ const Subscriptions = () => {
                 <TableHead>Auto-renew</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
+                <TableHead>Created At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -330,16 +331,73 @@ const Subscriptions = () => {
                   <TableRow key={subscription.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{subscription.display_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {subscription.email}
-                        </div>
+                        <Input 
+                          className="font-medium mb-1"
+                          value={subscription.display_name}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                display_name: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update display name"
+                              });
+                            }
+                          }}
+                        />
+                        <Input 
+                          className="text-sm text-muted-foreground"
+                          value={subscription.email}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                email: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update email"
+                              });
+                            }
+                          }}
+                        />
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {subscription.subscription_type || 'No subscription'}
-                      </Badge>
+                      <Select
+                        value={subscription.subscription_type || ""}
+                        onValueChange={async (value) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              subscription_type: value as any
+                            });
+                            await fetchSubscriptions();
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update subscription type"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No subscription</SelectItem>
+                          <SelectItem value="Trial">Trial</SelectItem>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Quarterly">Quarterly</SelectItem>
+                          <SelectItem value="Lifetime">Lifetime</SelectItem>
+                        </SelectContent>
+                      </Select>
                       {subscription.trial_used && (
                         <Badge variant="secondary" className="ml-2">
                           Trial Used
@@ -347,7 +405,32 @@ const Subscriptions = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      {renderStatusBadge(subscription.subscription_status)}
+                      <Select
+                        value={subscription.subscription_status}
+                        onValueChange={async (value) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              subscription_status: value as any
+                            });
+                            await fetchSubscriptions();
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update status"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Suspended">Suspended</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Select
@@ -398,6 +481,11 @@ const Subscriptions = () => {
                       ) : (
                         'Not set'
                       )}
+                    </TableCell>
+                    <TableCell>
+                      {subscription.created_at ? 
+                        format(new Date(subscription.created_at), "MMM d, yyyy HH:mm") 
+                        : 'Not set'}
                     </TableCell>
                     <TableCell className="text-right">
                       <SubscriptionActions
