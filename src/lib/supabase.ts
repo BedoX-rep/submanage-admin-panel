@@ -1,3 +1,4 @@
+
 import { createClient } from "@supabase/supabase-js";
 
 export type Subscription = {
@@ -37,7 +38,6 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
   try {
-    // Get user data directly from auth.users using the admin client
     const { data, error } = await supabaseAdmin
       .auth
       .admin
@@ -48,7 +48,6 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
       return false;
     }
 
-    // Check if user_metadata contains is_admin flag
     return data?.user?.user_metadata?.is_admin === true;
   } catch (error) {
     console.error("Error checking admin status:", error);
