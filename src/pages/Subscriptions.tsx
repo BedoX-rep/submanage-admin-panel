@@ -482,23 +482,55 @@ const Subscriptions = () => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      {subscription.start_date 
-                        ? format(new Date(subscription.start_date), "MMM d, yyyy")
-                        : 'Not set'}
+                      <Input 
+                        type="date"
+                        className="w-40"
+                        value={subscription.start_date ? new Date(subscription.start_date).toISOString().split('T')[0] : ''}
+                        onChange={async (e) => {
+                          try {
+                            await updateSubscription(subscription.id, {
+                              start_date: e.target.value
+                            });
+                            await fetchSubscriptions();
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to update start date"
+                            });
+                          }
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
-                      {subscription.end_date ? (
-                        <div className="flex items-center gap-2">
-                          {format(new Date(subscription.end_date), "MMM d, yyyy")}
-                          {isAfter(new Date(subscription.end_date), new Date()) ? (
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="date"
+                          className="w-40"
+                          value={subscription.end_date ? new Date(subscription.end_date).toISOString().split('T')[0] : ''}
+                          onChange={async (e) => {
+                            try {
+                              await updateSubscription(subscription.id, {
+                                end_date: e.target.value
+                              });
+                              await fetchSubscriptions();
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "Failed to update end date"
+                              });
+                            }
+                          }}
+                        />
+                        {subscription.end_date && (
+                          isAfter(new Date(subscription.end_date), new Date()) ? (
                             <Badge variant="outline" className="bg-green-50">Active</Badge>
                           ) : (
                             <Badge variant="outline" className="bg-red-50">Expired</Badge>
-                          )}
-                        </div>
-                      ) : (
-                        'Not set'
-                      )}
+                          )
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {subscription.created_at ? 
