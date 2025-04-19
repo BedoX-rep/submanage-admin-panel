@@ -176,6 +176,11 @@ export async function checkAndRenewSubscriptions() {
     }
   }
   
+  // Trigger a page refresh after processing is complete
+  if (typeof window !== 'undefined') {
+    window.location.reload();
+  }
+  
   return { 
     success: true, 
     renewed: renewedCount,
