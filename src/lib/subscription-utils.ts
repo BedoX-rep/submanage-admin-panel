@@ -118,7 +118,6 @@ export async function checkAndRenewSubscriptions() {
   const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
   
   // Check for expired subscriptions (non-recurring and past end date)
-  // Handle expired subscriptions first
   const { data: expiredSubscriptions, error: expiredError } = await supabaseAdmin
     .from("subscriptions")
     .select("*")
@@ -128,19 +127,15 @@ export async function checkAndRenewSubscriptions() {
 
   if (expiredError) {
     console.error("Error checking expired subscriptions:", expiredError);
-    return { success: false, error: expiredError };
-  }
-
-  if (expiredSubscriptions && expiredSubscriptions.length > 0) {
-    // Update all expired subscriptions in one batch
-    const { error: updateError } = await supabaseAdmin
-      .from("subscriptions")
-      .update({ subscription_status: "Expired" })
-      .in("id", expiredSubscriptions.map(sub => sub.id));
-      
-    if (updateError) {
-      console.error("Error updating expired subscriptions:", updateError);
-      return { success: false, error: updateError };
+  } else if (expiredSubscriptions) {
+    for (const subscription of expiredSubscriptions) {
+      try {
+        await updateSubscription(subscription.id, {
+          subscription_status: "Expired"
+        });
+      } catch (error) {
+        console.error(`Error updating expired subscription ${subscription.id}:`, error);
+      }
     }
   }
 
@@ -181,27 +176,9 @@ export async function checkAndRenewSubscriptions() {
     }
   }
   
-  // After processing, fetch latest subscriptions
-  const { data: latestSubscriptions, error: fetchError } = await supabaseAdmin
-    .from("subscriptions")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (fetchError) {
-    console.error("Error fetching updated subscriptions:", fetchError);
-    return { 
-      success: true, 
-      renewed: renewedCount,
-      expired: expiredSubscriptions?.length || 0,
-      subscriptions: null,
-      error: fetchError
-    };
-  }
-
   return { 
     success: true, 
     renewed: renewedCount,
-    expired: expiredSubscriptions?.length || 0,
-    subscriptions: latestSubscriptions
+    expired: expiredSubscriptions?.length || 0 
   };
 }

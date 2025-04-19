@@ -135,11 +135,9 @@ const Subscriptions = () => {
     const renewalCheck = async () => {
       try {
         const result = await checkAndRenewSubscriptions();
-        if (result.subscriptions) {
-          setSubscriptions(result.subscriptions);
-          if (result.renewed > 0 || result.expired > 0) {
-            console.log(`Renewed ${result.renewed} subscriptions, Expired ${result.expired} subscriptions`);
-          }
+        if (result.renewed > 0) {
+          console.log(`Renewed ${result.renewed} subscriptions`);
+          fetchSubscriptions(); // Refresh the list after renewals
         }
       } catch (error) {
         console.error("Error during subscription renewal check:", error);
@@ -325,19 +323,12 @@ const Subscriptions = () => {
           <Button onClick={async () => {
             try {
               const result = await checkAndRenewSubscriptions();
-              
-              if (result.subscriptions) {
-                setSubscriptions(result.subscriptions);
-                toast({
-                  title: "Renewal Check",
-                  description: `${result.renewed} renewed, ${result.expired} expired subscriptions`,
-                });
-              } else {
-                toast({
-                  variant: "destructive",
-                  title: "Error",
-                  description: "Failed to fetch updated subscriptions"
-                });
+              toast({
+                title: "Renewal Check",
+                description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
+              });
+              if (result.renewed > 0) {
+                fetchSubscriptions();
               }
             } catch (error) {
               toast({
