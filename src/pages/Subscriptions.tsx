@@ -717,6 +717,7 @@ const Subscriptions = () => {
                         <SelectContent>
                           <SelectItem value="Active">Active</SelectItem>
                           <SelectItem value="inActive">Inactive</SelectItem>
+                          <SelectItem value="Expired">Expired</SelectItem>
                           <SelectItem value="Suspended">Suspended</SelectItem>
                           <SelectItem value="Cancelled">Cancelled</SelectItem>
                         </SelectContent>
