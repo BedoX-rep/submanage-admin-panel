@@ -111,3 +111,47 @@ export async function removeSubscription(subscriptionId: string) {
 
   return data;
 }
+
+export async function checkAndRenewSubscriptions() {
+  const twoHoursFromNow = new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString();
+  
+  // Get all active recurring subscriptions that end within the next 2 hours
+  const { data: subscriptionsToRenew, error } = await supabaseAdmin
+    .from("subscriptions")
+    .select("*")
+    .eq("is_recurring", true)
+    .eq("subscription_status", "Active")
+    .lt("end_date", twoHoursFromNow);
+    
+  if (error) {
+    console.error("Error checking subscriptions for renewal:", error);
+    return { success: false, error };
+  }
+  
+  if (!subscriptionsToRenew || subscriptionsToRenew.length === 0) {
+    return { success: true, renewed: 0 };
+  }
+  
+  let renewedCount = 0;
+  
+  // Process each subscription
+  for (const subscription of subscriptionsToRenew) {
+    try {
+      const now = new Date();
+      const plan = subscription.subscription_type as SubscriptionPlan;
+      const newEndDate = addDays(now, SUBSCRIPTION_DURATIONS[plan]);
+      
+      // Update the subscription
+      await updateSubscription(subscription.id, {
+        start_date: now.toISOString(),
+        end_date: newEndDate.toISOString()
+      });
+      
+      renewedCount++;
+    } catch (error) {
+      console.error(`Error renewing subscription ${subscription.id}:`, error);
+    }
+  }
+  
+  return { success: true, renewed: renewedCount };
+}
