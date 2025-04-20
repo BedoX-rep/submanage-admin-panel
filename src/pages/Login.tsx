@@ -47,15 +47,18 @@ const Login = () => {
       await signIn(email, password);
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Authentication failed",
-        description: "Invalid email or password",
-      });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-admin-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-admin-background">
