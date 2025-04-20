@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase, isUserAdmin } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -22,30 +22,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
+  const checkAdminStatus = async (userId: string) => {
+    if (!userId) return false;
+    const adminStatus = await isUserAdmin(userId);
+    console.log("Admin status check result:", adminStatus);
+    setIsAdmin(adminStatus);
+    return adminStatus;
+  };
+
   useEffect(() => {
     // Set up initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Check if user has admin privileges from user metadata
-        const isAdminUser = session.user.user_metadata?.is_admin === true;
-        setIsAdmin(isAdminUser);
+        await checkAdminStatus(session.user.id);
       }
       
       setIsLoading(false);
     });
 
     // Listen for changes to auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Check if user has admin privileges from user metadata
-        const isAdminUser = session.user.user_metadata?.is_admin === true;
-        setIsAdmin(isAdminUser);
+        await checkAdminStatus(session.user.id);
       } else {
         setIsAdmin(false);
       }
@@ -61,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
         toast({
@@ -69,6 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Authentication failed",
           description: error.message,
         });
+      } else if (data.user) {
+        // Check admin status right after successful login
+        await checkAdminStatus(data.user.id);
       }
     } catch (error) {
       console.error("Sign in error:", error);

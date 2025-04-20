@@ -34,17 +34,29 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
   try {
+    // First, try to use the RPC function if available
+    const { data: isAdmin, error: rpcError } = await supabase
+      .rpc('is_admin');
+    
+    if (!rpcError && isAdmin !== null) {
+      console.log("Admin check via RPC:", isAdmin);
+      return isAdmin;
+    }
+    
+    // Fallback: check directly with admin privileges
     const { data, error } = await supabaseAdmin
-      .auth
-      .admin
-      .getUserById(userId);
+      .from('auth.users')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
 
     if (error) {
       console.error("Error checking admin status:", error);
       return false;
     }
 
-    return data?.user?.user_metadata?.is_admin === true;
+    console.log("Admin check via direct access:", data?.is_admin);
+    return data?.is_admin === true;
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;
