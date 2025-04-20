@@ -93,12 +93,10 @@ export async function deleteSubscription(subscriptionId: string) {
 }
 
 export async function removeSubscription(subscriptionId: string) {
+  // This function will now just change the status to inactive
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .update({
-      start_date: null,
-      end_date: null,
-      subscription_type: null,
       subscription_status: "inActive"
     })
     .eq("id", subscriptionId)
