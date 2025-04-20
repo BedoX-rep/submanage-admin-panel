@@ -113,4 +113,48 @@ export async function removeSubscription(subscriptionId: string) {
   return data;
 }
 
-// Removed automatic checkAndRenewSubscriptions function as requested
+// Add the missing checkAndRenewSubscriptions function
+export async function checkAndRenewSubscriptions() {
+  const now = new Date();
+  
+  // Find all expired subscriptions that are set to auto-renew and are active
+  const { data: expiredSubscriptions, error } = await supabaseAdmin
+    .from("subscriptions")
+    .select("*")
+    .eq("is_recurring", true)
+    .eq("subscription_status", "Active")
+    .lt("end_date", now.toISOString());
+  
+  if (error) {
+    throw error;
+  }
+  
+  let renewedCount = 0;
+  
+  // Process each expired subscription
+  for (const subscription of expiredSubscriptions || []) {
+    if (!subscription.subscription_type) continue;
+    
+    const startDate = new Date();
+    const durationDays = SUBSCRIPTION_DURATIONS[subscription.subscription_type as SubscriptionPlan];
+    const endDate = new Date(startDate.getTime() + (durationDays * 24 * 60 * 60 * 1000));
+    
+    // Update the subscription with new dates
+    const { error: updateError } = await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString()
+      })
+      .eq("id", subscription.id);
+    
+    if (!updateError) {
+      renewedCount++;
+    }
+  }
+  
+  return {
+    checked: expiredSubscriptions?.length || 0,
+    renewed: renewedCount
+  };
+}
