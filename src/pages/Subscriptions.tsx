@@ -48,8 +48,7 @@ import {
   updateSubscription, 
   deleteSubscription, 
   removeSubscription, 
-  SubscriptionPlan, 
-  checkAndRenewSubscriptions 
+  SubscriptionPlan
 } from "@/lib/subscription-utils";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
 import { cn } from "@/lib/utils";
@@ -130,27 +129,6 @@ const Subscriptions = () => {
     }
   };
 
-  // Poll for subscriptions that need renewal every hour
-  useEffect(() => {
-    const renewalCheck = async () => {
-      try {
-        const result = await checkAndRenewSubscriptions();
-        if (result.renewed > 0) {
-          console.log(`Renewed ${result.renewed} subscriptions`);
-          fetchSubscriptions(); // Refresh the list after renewals
-        }
-      } catch (error) {
-        console.error("Error during subscription renewal check:", error);
-      }
-    };
-
-    // Run immediately and then every hour
-    renewalCheck();
-    const interval = setInterval(renewalCheck, 60 * 60 * 1000); // Check every hour
-
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     fetchSubscriptions();
   }, [currentPage, searchTerm, filters]);
@@ -212,18 +190,22 @@ const Subscriptions = () => {
 
   const handleRemoveSubscription = async (subscriptionId: string) => {
     try {
-      await removeSubscription(subscriptionId);
+      // Instead of using removeSubscription function, we'll directly update the status to "inActive"
+      await updateSubscription(subscriptionId, {
+        subscription_status: "inActive"
+      });
+      
       toast({
         title: "Success",
-        description: "Subscription removed successfully",
+        description: "Subscription deactivated successfully",
       });
       await fetchSubscriptions();
     } catch (error) {
-      console.error("Error removing subscription:", error);
+      console.error("Error deactivating subscription:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to remove subscription",
+        description: "Failed to deactivate subscription",
       });
     }
   };
@@ -321,31 +303,14 @@ const Subscriptions = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-admin-primary">Subscriptions</h1>
           <Button onClick={async () => {
-            try {
-              const result = await checkAndRenewSubscriptions();
-              toast({
-                title: "Renewal Check",
-                description: `Checked for renewals: ${result.renewed} subscriptions renewed`,
-              });
-              // Click reset button after 1 second
-              setTimeout(() => {
-                const resetButton = document.querySelector('[aria-label="Reset filters"]') as HTMLButtonElement;
-                if (resetButton) {
-                  resetButton.click();
-                }
-              }, 1000);
-              
-              fetchSubscriptions();
-            } catch (error) {
-              toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to check subscriptions for renewal",
-              });
-            }
+            fetchSubscriptions();
+            toast({
+              title: "Refreshed",
+              description: "Subscription list has been refreshed",
+            });
           }}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            Check Renewals
+            Refresh List
           </Button>
         </div>
 

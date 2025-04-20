@@ -48,7 +48,7 @@ export function SubscriptionActions({
           onClick={() => setIsRemoveDialogOpen(true)}
           className="text-amber-500 hover:text-amber-600"
         >
-          <span className="sr-only">Remove Subscription</span>
+          <span className="sr-only">Deactivate Subscription</span>
           <Ban className="h-4 w-4" />
         </Button>
         <Button
@@ -82,9 +82,9 @@ export function SubscriptionActions({
           onRemove(subscription.id);
           setIsRemoveDialogOpen(false);
         }}
-        title="Remove Subscription"
-        description="Are you sure you want to suspend this subscription?"
-        confirmText="Remove"
+        title="Deactivate Subscription"
+        description="Are you sure you want to deactivate this subscription? The subscription will be marked as inactive."
+        confirmText="Deactivate"
         cancelText="Cancel"
       />
     </>
