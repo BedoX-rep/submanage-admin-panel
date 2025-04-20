@@ -19,7 +19,6 @@ export async function assignSubscription(
   isRecurring: boolean = false
 ) {
   const startDate = new Date();
-  // Calculate exact end date based on current time
   const endDate = new Date(startDate.getTime() + (SUBSCRIPTION_DURATIONS[plan] * 24 * 60 * 60 * 1000));
 
   // First, check if user has used trial before
@@ -94,12 +93,10 @@ export async function deleteSubscription(subscriptionId: string) {
 }
 
 export async function removeSubscription(subscriptionId: string) {
+  // This function will now just change the status to inactive
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .update({
-      start_date: null,
-      end_date: null,
-      subscription_type: null,
       subscription_status: "inActive"
     })
     .eq("id", subscriptionId)
@@ -111,74 +108,4 @@ export async function removeSubscription(subscriptionId: string) {
   }
 
   return data;
-}
-
-export async function checkAndRenewSubscriptions() {
-  const now = new Date();
-  const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
-  
-  // Check for expired subscriptions (non-recurring and past end date)
-  const { data: expiredSubscriptions, error: expiredError } = await supabaseAdmin
-    .from("subscriptions")
-    .select("*")
-    .eq("subscription_status", "Active")
-    .eq("is_recurring", false)
-    .lt("end_date", now.toISOString());
-
-  if (expiredError) {
-    console.error("Error checking expired subscriptions:", expiredError);
-  } else if (expiredSubscriptions) {
-    for (const subscription of expiredSubscriptions) {
-      try {
-        await updateSubscription(subscription.id, {
-          subscription_status: "Expired"
-        });
-      } catch (error) {
-        console.error(`Error updating expired subscription ${subscription.id}:`, error);
-      }
-    }
-  }
-
-  // Get all active recurring subscriptions that end within the next 2 hours
-  const { data: subscriptionsToRenew, error } = await supabaseAdmin
-    .from("subscriptions")
-    .select("*")
-    .eq("is_recurring", true)
-    .eq("subscription_status", "Active")
-    .lt("end_date", twoHoursFromNow);
-    
-  if (error) {
-    console.error("Error checking subscriptions for renewal:", error);
-    return { success: false, error };
-  }
-  
-  if (!subscriptionsToRenew || subscriptionsToRenew.length === 0) {
-    return { success: true, renewed: 0, expired: expiredSubscriptions?.length || 0 };
-  }
-  
-  let renewedCount = 0;
-  
-  // Process each subscription
-  for (const subscription of subscriptionsToRenew) {
-    try {
-      const plan = subscription.subscription_type as SubscriptionPlan;
-      const newEndDate = addDays(now, SUBSCRIPTION_DURATIONS[plan]);
-      
-      // Update the subscription
-      await updateSubscription(subscription.id, {
-        start_date: now.toISOString(),
-        end_date: newEndDate.toISOString()
-      });
-      
-      renewedCount++;
-    } catch (error) {
-      console.error(`Error renewing subscription ${subscription.id}:`, error);
-    }
-  }
-  
-  return { 
-    success: true, 
-    renewed: renewedCount,
-    expired: expiredSubscriptions?.length || 0 
-  };
 }
